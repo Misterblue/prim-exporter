@@ -1,0 +1,24 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="InWorldz.PrimExporter.ExpLib.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="InventoryCluster" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="WhipHostname" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">localhost</Value>
+    </Setting>
+    <Setting Name="WhipPort" Type="System.UInt16" Scope="Application">
+      <Value Profile="(Default)">32700</Value>
+    </Setting>
+    <Setting Name="WhipPassword" Type="System.String" Scope="Application">
+      <Value Profile="(Default)"></Value>
+    </Setting>
+    <Setting Name="MigrationActive" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="CoreConnStr" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Data Source=hostos;Database=inworldz;User ID=root;Password=;Pooling=True;Min Pool Size=5;</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
