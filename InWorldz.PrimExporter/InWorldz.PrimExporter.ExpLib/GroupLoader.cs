@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
@@ -14,6 +11,7 @@ using MySql.Data.MySqlClient;
 using InWorldz.Region.Data.Thoosa.Engines;
 using Nini.Config;
 using System.Reflection;
+using OpenSim.Data;
 
 namespace InWorldz.PrimExporter.ExpLib
 {
@@ -52,11 +50,11 @@ namespace InWorldz.PrimExporter.ExpLib
 
         private static readonly GroupLoader instance = new GroupLoader();
 
-        private InWorldz.Data.Assets.Stratus.StratusAssetClient _stratus;
+        private readonly Data.Assets.Stratus.StratusAssetClient _stratus;
         private InventoryStorage _inv;
         private LegacyMysqlInventoryStorage _legacyInv;
-        private CassandraMigrationProviderSelector _invSelector;
-        private OpenMetaverse.Rendering.MeshmerizerR _renderer = new OpenMetaverse.Rendering.MeshmerizerR();
+        private readonly CassandraMigrationProviderSelector _invSelector;
+        private readonly MeshmerizerR _renderer = new MeshmerizerR();
         private Dictionary<UUID, string> _usernameCache = new Dictionary<UUID,string>();
 
         static GroupLoader()
@@ -130,6 +128,18 @@ namespace InWorldz.PrimExporter.ExpLib
                 sog = SceneXmlLoader.DeserializeGroupFromXml2(Utils.BytesToString(asset.Data));
             }
 
+            return GroupDisplayDataFromSOG(userId, parms, sog, inv, userName, item);
+        }
+
+        public GroupDisplayData LoadFromXML(string xmlData, LoaderParams parms)
+        {
+            SceneObjectGroup sog = SceneXmlLoader.DeserializeGroupFromXml2(xmlData);
+            return GroupDisplayDataFromSOG(UUID.Zero, parms, sog, null, string.Empty, null);
+        }
+
+        private GroupDisplayData GroupDisplayDataFromSOG(UUID userId, LoaderParams parms, SceneObjectGroup sog,
+            IInventoryStorage inv, string userName, InventoryItemBase item)
+        {
             if (((parms.Checks & LoaderChecks.PrimLimit) != 0) && sog.Children.Count > parms.PrimLimit)
             {
                 throw new Exceptions.PrimExporterPermissionException("Object contains too many prims");
@@ -156,10 +166,9 @@ namespace InWorldz.PrimExporter.ExpLib
                 {
                     groupData.Add(pdd);
                 }
-                
             }
 
-            return new GroupDisplayData { Prims = groupData, CreatorName = userName, ObjectName = item.Name.Replace('_', ' ') };
+            return new GroupDisplayData {Prims = groupData, CreatorName = userName, ObjectName = item?.Name.Replace('_', ' ') ?? ""};
         }
 
         private string LookupUserName(UUID uUID)
