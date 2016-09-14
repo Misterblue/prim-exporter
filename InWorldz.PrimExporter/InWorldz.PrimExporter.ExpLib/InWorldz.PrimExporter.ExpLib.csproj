@@ -117,11 +117,13 @@
     <Compile Include="Exceptions\PrimExporterPermissionException.cs" />
     <Compile Include="ExpLib.cs" />
     <Compile Include="GroupDisplayData.cs" />
+    <Compile Include="ImportExport\BabylonJSONPackager.cs" />
     <Compile Include="ImportExport\ExportFormatterFactory.cs" />
     <Compile Include="ImportExport\ExportResult.cs" />
     <Compile Include="ImportExport\IExportFormatter.cs" />
     <Compile Include="ImportExport\IPackager.cs" />
     <Compile Include="ImportExport\Package.cs" />
+    <Compile Include="ImportExport\PackagerFactory.cs" />
     <Compile Include="ImportExport\ThreeJSONPackager.cs" />
     <Compile Include="ImportExport\ThreeJSONPrimFaceCombiner.cs" />
     <Compile Include="ImportExport\ThreeJSONFormatter.cs" />
