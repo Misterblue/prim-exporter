@@ -9,7 +9,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
     {
         private static readonly PackagerFactory instance = new PackagerFactory();
 
-        private readonly Dictionary<string, IExportFormatter> _formatters = new Dictionary<string, IExportFormatter>();
+        private readonly Dictionary<string, IPackager> _packagers = new Dictionary<string, IPackager>();
 
         static PackagerFactory()
         {
@@ -17,8 +17,8 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
         public static void Init()
         {
-            instance.Register(new ThreeJSONFormatter(), "ThreeJSONPackager");
-            instance.Register(new ThreeJSONFormatter(), "BabylonJSONPackager");
+            instance.Register(new ThreeJSONPackager(), "ThreeJSONPackager");
+            instance.Register(new BabylonJSONPackager(), "BabylonJSONPackager");
         }
 
         private PackagerFactory()
@@ -27,14 +27,14 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
         public static PackagerFactory Instance => instance;
 
-        public void Register(IExportFormatter formatter, string name)
+        public void Register(IPackager packager, string name)
         {
-            _formatters.Add(name, formatter);
+            _packagers.Add(name, packager);
         }
 
-        public IExportFormatter Get(string name)
+        public IPackager Get(string name)
         {
-            return _formatters[name];
+            return _packagers[name];
         }
     }
 }

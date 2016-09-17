@@ -29,7 +29,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             {
                 File.Move(img, Path.Combine(dirName, Path.GetFileName(img)));
             }
-
+                
             List<object> offsetList = new List<object>();
 
             foreach (var dispInfo in res.BaseObjects)

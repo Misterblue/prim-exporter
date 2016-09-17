@@ -9,7 +9,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
     /// Interface for packaging an export result into a result suitable
     /// for copying to a desintation
     /// </summary>
-    interface IPackager
+    public interface IPackager
     {
         Package CreatePackage(ExportResult result, string baseDir);
     }
