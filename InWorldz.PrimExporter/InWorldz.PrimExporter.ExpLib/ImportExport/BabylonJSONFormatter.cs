@@ -13,7 +13,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
     /// <summary>
     /// Formatter that outputs results suitable for using with three.js
     /// </summary>
-    public class ThreeJSONFormatter : IExportFormatter
+    public class BabylonJSONFormatter : IExportFormatter
     {
         public ExportResult Export(GroupDisplayData datas)
         {
@@ -47,7 +47,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
 
 
-        const int MAX_IMAGE_SIZE = 256;
+        const int MAX_IMAGE_SIZE = 512;
         /// <summary>
         /// Writes the given material texture to a file and writes back to the KVP whether it contains alpha
         /// </summary>
@@ -62,7 +62,6 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             if (GroupLoader.Instance.LoadTexture(textureAssetId, ref img, false))
             {
                 img = ConstrainTextureSize((Bitmap)img, MAX_IMAGE_SIZE);
-                img = ObfuscateTexture((Bitmap)img, out hasAlpha);
                 string fileName = Path.Combine(tempPath, textureName);
                 using (img)
                 {
@@ -101,7 +100,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             }
         }
 
-        private Image ObfuscateTexture(Bitmap img, out bool hasAlpha)
+        private bool DetectAlpha(Bitmap img)
         {
             bool alpha = false;
             for (int x = 0; x < img.Width; x++)
@@ -109,13 +108,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 for (int y = 0; y < img.Height; y++)
                 {
                     Color c = img.GetPixel(x, y);
-                    
-                    byte newBlue = (byte)((c.G + c.B) / 2);
-                    Color newColor = Color.FromArgb(c.A, c.G, c.R, c.B);
-
                     if (c.A < 255) alpha = true;
-
-                    img.SetPixel(x, y, newColor);
                 }
             }
 
@@ -164,20 +157,8 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 bones = 0
             };
 
-            /*
-                "colorAmbient" : [0.0, 0.0, 0.0],
-	            "colorDiffuse" : [0.6400000190734865, 0.6400000190734865, 0.6400000190734865],
-	            "colorSpecular" : [0.37434511778136503, 0.37434511778136503, 0.37434511778136503],
-	            "mapDiffuse" : "monster.jpg",
-	            "mapDiffuseWrap" : ["repeat", "repeat"],
-	            "shading" : "Lambert",
-	            "specularCoef" : 50,
-	            "transparency" : 1.0,
-	            "vertexColors" : false
-	            }],
-             */
             List<object> jsMaterials = new List<object>();
-            for (int i = 0; i < combiner.Materials.Count; i ++)
+            for (int i = 0; i < combiner.Materials.Count; i++)
             {
                 var material = combiner.Materials[i];
                 float shinyPercent = ShinyToPercent(material.Shiny);
@@ -231,7 +212,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 morphTargets = new int[0],
                 normals = combiner.Normals,
                 colors = new float[0],
-                uvs = new float[][] {combiner.UVs.ToArray()},
+                uvs = new float[][] { combiner.UVs.ToArray() },
                 faces = combiner.EncodedIndices
             };
 
@@ -255,6 +236,6 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             return 0.0f;
         }
 
-        
+
     }
 }

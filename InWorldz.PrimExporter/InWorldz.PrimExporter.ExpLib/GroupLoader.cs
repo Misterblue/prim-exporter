@@ -171,18 +171,18 @@ namespace InWorldz.PrimExporter.ExpLib
             return new GroupDisplayData {Prims = groupData, CreatorName = userName, ObjectName = item?.Name.Replace('_', ' ') ?? ""};
         }
 
-        private string LookupUserName(UUID uUID)
+        private string LookupUserName(UUID uuid)
         {
             string userName;
-            if (! _usernameCache.TryGetValue(uUID, out userName))
+            if (! _usernameCache.TryGetValue(uuid, out userName))
             {
-                userName = DbLookupUser(uUID);
+                userName = DbLookupUser(uuid);
             }
 
             return userName;
         }
 
-        private string DbLookupUser(UUID uUID)
+        private string DbLookupUser(UUID uuid)
         {
             using (MySqlConnection conn = new MySqlConnection(Properties.Settings.Default.CoreConnStr))
             {
@@ -190,7 +190,7 @@ namespace InWorldz.PrimExporter.ExpLib
 
                 using (MySqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = String.Format("SELECT CONCAT(username, ' ', lastname) FROM users WHERE UUID = '{0}' LIMIT 1", uUID.ToString());
+                    cmd.CommandText = String.Format("SELECT CONCAT(username, ' ', lastname) FROM users WHERE UUID = '{0}' LIMIT 1", uuid.ToString());
                     return (string)cmd.ExecuteScalar();
                 }
             }

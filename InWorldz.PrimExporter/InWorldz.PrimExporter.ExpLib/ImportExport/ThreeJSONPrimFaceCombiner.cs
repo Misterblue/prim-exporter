@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
@@ -28,10 +26,6 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public List<float> UVs = new List<float>();
         public List<OpenMetaverse.Primitive.TextureEntryFace> Materials = new List<OpenMetaverse.Primitive.TextureEntryFace>();
         public int TotalFaces = 0;
-
-        public ThreeJSONPrimFaceCombiner()
-        {
-        }
 
         public void CombineFace(OpenMetaverse.Rendering.Face face)
         {

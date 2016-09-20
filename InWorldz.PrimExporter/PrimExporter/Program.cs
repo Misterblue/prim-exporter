@@ -58,7 +58,6 @@ namespace PrimExporter
             IExportFormatter formatter = ExportFormatterFactory.Instance.Get(_formatter);
             ExportResult res = formatter.Export(data);
 
-
             IPackager packager = PackagerFactory.Instance.Get(_packager);
             packager.CreatePackage(res, _outputDir);
 

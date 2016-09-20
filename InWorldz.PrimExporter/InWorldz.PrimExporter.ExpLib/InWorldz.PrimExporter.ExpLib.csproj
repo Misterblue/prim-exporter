@@ -117,6 +117,7 @@
     <Compile Include="Exceptions\PrimExporterPermissionException.cs" />
     <Compile Include="ExpLib.cs" />
     <Compile Include="GroupDisplayData.cs" />
+    <Compile Include="ImportExport\BabylonJSONFormatter.cs" />
     <Compile Include="ImportExport\BabylonJSONPackager.cs" />
     <Compile Include="ImportExport\ExportFormatterFactory.cs" />
     <Compile Include="ImportExport\ExportResult.cs" />
@@ -128,6 +129,7 @@
     <Compile Include="ImportExport\ThreeJSONPrimFaceCombiner.cs" />
     <Compile Include="ImportExport\ThreeJSONFormatter.cs" />
     <Compile Include="GroupLoader.cs" />
+    <Compile Include="ImportExport\TrackedMaterial.cs" />
     <Compile Include="PrimDisplayData.cs" />
     <Compile Include="PrimFace\FaceData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
