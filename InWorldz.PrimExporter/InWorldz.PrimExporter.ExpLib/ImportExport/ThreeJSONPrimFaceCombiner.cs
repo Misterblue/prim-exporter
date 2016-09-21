@@ -29,10 +29,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
         public void CombineFace(OpenMetaverse.Rendering.Face face)
         {
-            int indicesBase = EncodedIndices.Count;
             int verticesBase = Vertices.Count;
-            int normalsBase = Normals.Count;
-            int uvsBase = UVs.Count;
 
             PrimFace.FaceData faceData = (PrimFace.FaceData)face.UserData;
 

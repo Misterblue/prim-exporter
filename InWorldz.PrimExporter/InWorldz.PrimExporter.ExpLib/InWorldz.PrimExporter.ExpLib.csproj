@@ -126,6 +126,7 @@
     <Compile Include="ImportExport\Package.cs" />
     <Compile Include="ImportExport\PackagerFactory.cs" />
     <Compile Include="ImportExport\ThreeJSONPackager.cs" />
+    <Compile Include="ImportExport\BabylonJSONPrimFaceCombiner.cs" />
     <Compile Include="ImportExport\ThreeJSONPrimFaceCombiner.cs" />
     <Compile Include="ImportExport\ThreeJSONFormatter.cs" />
     <Compile Include="GroupLoader.cs" />

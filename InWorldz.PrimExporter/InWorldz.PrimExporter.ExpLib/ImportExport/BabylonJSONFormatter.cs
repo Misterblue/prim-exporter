@@ -45,24 +45,26 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             return result;
         }
 
-
-
-        const int MAX_IMAGE_SIZE = 512;
         /// <summary>
         /// Writes the given material texture to a file and writes back to the KVP whether it contains alpha
         /// </summary>
+        /// <param name="textureAssetId"></param>
+        /// /// <param name="textureName"></param>
         /// <param name="fileRecord"></param>
         /// <param name="tempPath"></param>
-        /// <param name="kvp"></param>
         /// <returns></returns>
         private KeyValuePair<UUID, TrackedMaterial> WriteMaterialTexture(UUID textureAssetId, string textureName, string tempPath, List<string> fileRecord)
         {
+            const int MAX_IMAGE_SIZE = 512;
+
             Image img = null;
             bool hasAlpha = false;
             if (GroupLoader.Instance.LoadTexture(textureAssetId, ref img, false))
             {
                 img = ConstrainTextureSize((Bitmap)img, MAX_IMAGE_SIZE);
+                hasAlpha = DetectAlpha((Bitmap)img);
                 string fileName = Path.Combine(tempPath, textureName);
+
                 using (img)
                 {
                     img.Save(fileName, ImageFormat.Png);
@@ -94,26 +96,22 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 img.Dispose();
                 return thumbNail;
             }
-            else
-            {
-                return img;
-            }
+
+            return img;
         }
 
         private bool DetectAlpha(Bitmap img)
         {
-            bool alpha = false;
             for (int x = 0; x < img.Width; x++)
             {
                 for (int y = 0; y < img.Height; y++)
                 {
                     Color c = img.GetPixel(x, y);
-                    if (c.A < 255) alpha = true;
+                    if (c.A < 255) return true;
                 }
             }
 
-            hasAlpha = alpha;
-            return img;
+            return false;
         }
 
         private ExportResult ExportSingle(PrimDisplayData data, Dictionary<UUID, TrackedMaterial> materialTracker, UUID index,
