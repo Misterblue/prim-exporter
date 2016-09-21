@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 14
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InWorldz.PrimExporter.ExpLib", "InWorldz.PrimExporter.ExpLib\InWorldz.PrimExporter.ExpLib.csproj", "{06C2EF5E-D49A-4550-ABEC-ADFB42CC43AE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrimExporter", "PrimExporter\PrimExporter.csproj", "{70F52E9E-2655-43F7-8B16-3A78F4AEA03D}"
