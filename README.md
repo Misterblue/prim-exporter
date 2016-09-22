@@ -5,8 +5,6 @@ Expects a halcyon checkout and build in the same parent directory to resolve dep
 
 eg:
 
-My Directory
----------------------
 halcyon/
 prim-exporter/
 
