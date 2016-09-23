@@ -134,19 +134,19 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             UUID index, PrimDisplayData data, out List<OpenMetaverse.Primitive.TextureEntryFace> materials, Dictionary<UUID, TrackedMaterial> materialTracker,
             string materialType, List<string> textureFileRecord, string tempPath)
         {
-
-            ThreeJSONPrimFaceCombiner combiner = new ThreeJSONPrimFaceCombiner();
+            BabylonJSONPrimFaceCombiner combiner = new BabylonJSONPrimFaceCombiner();
             foreach (var face in data.Mesh.Faces)
             {
                 combiner.CombineFace(face);
             }
+            
 
             var meta = new
             {
                 formatVersion = 3.1,
                 generatedBy = "InWorldz.PrimExporter",
                 vertices = combiner.Vertices.Count,
-                faces = combiner.TotalFaces,
+                //faces = combiner.TotalFaces,
                 normals = combiner.Normals.Count / 3,
                 colors = 0,
                 uvs = combiner.UVs.Count / 2,
@@ -211,7 +211,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 normals = combiner.Normals,
                 colors = new float[0],
                 uvs = new float[][] { combiner.UVs.ToArray() },
-                faces = combiner.EncodedIndices
+                //faces = combiner.EncodedIndices
             };
 
             materials = combiner.Materials;
