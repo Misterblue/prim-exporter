@@ -71,7 +71,7 @@ namespace InWorldz.PrimExporter.ExpLib
 
             Data.Assets.Stratus.Config.Settings.Instance.DisableWritebackCache = true;
             _stratus = new Data.Assets.Stratus.StratusAssetClient();
-            _stratus.Initialise(settings);
+            _stratus.Initialize(settings);
             _stratus.Start();
 
             _legacyInv = new LegacyMysqlInventoryStorage(Properties.Settings.Default.CoreConnStr);
@@ -140,7 +140,7 @@ namespace InWorldz.PrimExporter.ExpLib
         private GroupDisplayData GroupDisplayDataFromSOG(UUID userId, LoaderParams parms, SceneObjectGroup sog,
             IInventoryStorage inv, string userName, InventoryItemBase item)
         {
-            if (((parms.Checks & LoaderChecks.PrimLimit) != 0) && sog.Children.Count > parms.PrimLimit)
+            if (((parms.Checks & LoaderChecks.PrimLimit) != 0) && sog.GetParts().Count > parms.PrimLimit)
             {
                 throw new Exceptions.PrimExporterPermissionException("Object contains too many prims");
             }
@@ -148,7 +148,7 @@ namespace InWorldz.PrimExporter.ExpLib
             HashSet<UUID> fullPermTextures = CollectFullPermTexturesIfNecessary(ref userId, parms, inv);
 
             List<PrimDisplayData> groupData = new List<PrimDisplayData>();
-            foreach (SceneObjectPart part in sog.Children.Values)
+            foreach (SceneObjectPart part in sog.GetParts())
             {
                 if (((parms.Checks & LoaderChecks.UserMustBeCreator) != 0) && part.CreatorID != userId)
                 {
