@@ -18,7 +18,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public ExportResult Export(GroupDisplayData datas)
         {
             ExportResult result = new ExportResult();
-            Dictionary<UUID, TrackedMaterial> materialTracker = new Dictionary<UUID, TrackedMaterial>();
+            Dictionary<UUID, TrackedTexture> materialTracker = new Dictionary<UUID, TrackedTexture>();
             string tempPath = Path.GetTempPath();
 
             foreach (var data in datas.Prims)
@@ -34,7 +34,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
         public ExportResult Export(PrimDisplayData data)
         {
-            Dictionary<UUID, TrackedMaterial> materialTracker = new Dictionary<UUID, TrackedMaterial>();
+            Dictionary<UUID, TrackedTexture> materialTracker = new Dictionary<UUID, TrackedTexture>();
             List<string> fileRecord = new List<string>();
             string tempPath = Path.GetTempPath();
 
@@ -55,7 +55,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         /// <param name="tempPath"></param>
         /// <param name="kvp"></param>
         /// <returns></returns>
-        private KeyValuePair<UUID, TrackedMaterial> WriteMaterialTexture(UUID textureAssetId, string textureName, string tempPath, List<string> fileRecord)
+        private KeyValuePair<UUID, TrackedTexture> WriteMaterialTexture(UUID textureAssetId, string textureName, string tempPath, List<string> fileRecord)
         {
             Image img = null;
             bool hasAlpha = false;
@@ -72,8 +72,8 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 fileRecord.Add(fileName);
             }
 
-            KeyValuePair<UUID, TrackedMaterial> retMaterial = new KeyValuePair<UUID, TrackedMaterial>(textureAssetId,
-                new TrackedMaterial { HasAlpha = hasAlpha, Name = textureName });
+            KeyValuePair<UUID, TrackedTexture> retMaterial = new KeyValuePair<UUID, TrackedTexture>(textureAssetId,
+                new TrackedTexture { HasAlpha = hasAlpha, Name = textureName });
 
             return retMaterial;
         }
@@ -123,7 +123,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             return img;
         }
 
-        private ExportResult ExportSingle(PrimDisplayData data, Dictionary<UUID, TrackedMaterial> materialTracker, UUID index,
+        private ExportResult ExportSingle(PrimDisplayData data, Dictionary<UUID, TrackedTexture> materialTracker, UUID index,
             string materialType, List<string> textureFileRecord, string tempPath)
         {
             ExportResult result = new ExportResult();
@@ -140,7 +140,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         }
 
         private string SerializeCombinedFaces(
-            UUID index, PrimDisplayData data, out List<OpenMetaverse.Primitive.TextureEntryFace> materials, Dictionary<UUID, TrackedMaterial> materialTracker,
+            UUID index, PrimDisplayData data, out List<OpenMetaverse.Primitive.TextureEntryFace> materials, Dictionary<UUID, TrackedTexture> materialTracker,
             string materialType, List<string> textureFileRecord, string tempPath)
         {
 
@@ -185,7 +185,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 bool hasMaterial = material.TextureID != OpenMetaverse.UUID.Zero;
 
                 //check the material tracker, if we already have this texture, don't export it again
-                TrackedMaterial trackedMaterial = null;
+                TrackedTexture trackedMaterial = null;
 
                 if (hasMaterial)
                 {

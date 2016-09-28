@@ -27,13 +27,10 @@ namespace InWorldz.PrimExporter.ExpLib
             FlipTextureUVs = (1 << 3)
         }
 
-        private const int DEFAULT_PART_VERT_LIMIT = 50000;
-
         public class LoaderParams
         {
             public int PrimLimit;
             public LoaderChecks Checks;
-            public int PartVertLimit = DEFAULT_PART_VERT_LIMIT;
         }
 
         
@@ -46,6 +43,7 @@ namespace InWorldz.PrimExporter.ExpLib
         private readonly CassandraMigrationProviderSelector _invSelector;
         private readonly MeshmerizerR _renderer = new MeshmerizerR();
         private Dictionary<UUID, string> _usernameCache = new Dictionary<UUID,string>();
+        private readonly ObjectHasher _objectHasher;
 
         static GroupLoader()
         {
@@ -79,11 +77,11 @@ namespace InWorldz.PrimExporter.ExpLib
         {
             get
             {
-                return instance;
+                return GroupLoader.instance;
             }
         }
 
-        public GroupDisplayData Load(UUID userId, UUID itemId, LoaderParams parms)
+        public GroupDisplayData Load(UUID userId, UUID itemId, GroupLoader.LoaderParams parms)
         {
             OpenSim.Data.IInventoryStorage inv = _invSelector.GetProvider(userId);
 
@@ -121,13 +119,13 @@ namespace InWorldz.PrimExporter.ExpLib
             return GroupDisplayDataFromSOG(userId, parms, sog, inv, userName, item);
         }
 
-        public GroupDisplayData LoadFromXML(string xmlData, LoaderParams parms)
+        public GroupDisplayData LoadFromXML(string xmlData, GroupLoader.LoaderParams parms)
         {
             SceneObjectGroup sog = SceneXmlLoader.DeserializeGroupFromXml2(xmlData);
             return GroupDisplayDataFromSOG(UUID.Zero, parms, sog, null, string.Empty, null);
         }
 
-        private GroupDisplayData GroupDisplayDataFromSOG(UUID userId, LoaderParams parms, SceneObjectGroup sog,
+        private GroupDisplayData GroupDisplayDataFromSOG(UUID userId, GroupLoader.LoaderParams parms, SceneObjectGroup sog,
             IInventoryStorage inv, string userName, InventoryItemBase item)
         {
             if (((parms.Checks & LoaderChecks.PrimLimit) != 0) && sog.GetParts().Count > parms.PrimLimit)
@@ -137,6 +135,7 @@ namespace InWorldz.PrimExporter.ExpLib
 
             HashSet<UUID> fullPermTextures = CollectFullPermTexturesIfNecessary(ref userId, parms, inv);
 
+            PrimDisplayData rootPrim = null;
             List<PrimDisplayData> groupData = new List<PrimDisplayData>();
             foreach (SceneObjectPart part in sog.GetParts())
             {
@@ -152,13 +151,12 @@ namespace InWorldz.PrimExporter.ExpLib
                     vertCount += face.Vertices.Count;
                 }
 
-                if (vertCount <= parms.PartVertLimit)
-                {
-                    groupData.Add(pdd);
-                }
+                groupData.Add(pdd);
+                if (pdd.IsRootPrim) rootPrim = pdd;
             }
 
-            return new GroupDisplayData {Prims = groupData, CreatorName = userName, ObjectName = item?.Name.Replace('_', ' ') ?? ""};
+            return new GroupDisplayData {Prims = groupData, RootPrim = rootPrim, CreatorName = userName,
+                ObjectName = item?.Name.Replace('_', ' ') ?? ""};
         }
 
         private string LookupUserName(UUID uuid)
@@ -186,7 +184,7 @@ namespace InWorldz.PrimExporter.ExpLib
             }
         }
 
-        private HashSet<UUID> CollectFullPermTexturesIfNecessary(ref UUID userId, LoaderParams parms, OpenSim.Data.IInventoryStorage inv)
+        private HashSet<UUID> CollectFullPermTexturesIfNecessary(ref UUID userId, GroupLoader.LoaderParams parms, OpenSim.Data.IInventoryStorage inv)
         {
             HashSet<UUID> fullPermTextures;
             if ((parms.Checks & LoaderChecks.TexturesMustBeFullPerm) != 0)
@@ -250,109 +248,7 @@ namespace InWorldz.PrimExporter.ExpLib
             }
         }
 
-        /// <summary>
-        /// Calculate a hash value over fields that can affect the underlying physics shape.
-        /// Things like RenderMaterials and TextureEntry data are not included.
-        /// </summary>
-        /// <param name="size"></param>
-        /// <param name="lod"></param>
-        /// <returns>ulong - a calculated hash value</returns>
-        public ulong GetMeshShapeHash(PrimitiveBaseShape shape, DetailLevel lod)
-        {
-            ulong hash = 5381;
-
-            hash = djb2(hash, shape.PathCurve);
-            hash = djb2(hash, (byte)((byte)shape.HollowShape | (byte)shape.ProfileShape));
-            hash = djb2(hash, shape.PathBegin);
-            hash = djb2(hash, shape.PathEnd);
-            hash = djb2(hash, shape.PathScaleX);
-            hash = djb2(hash, shape.PathScaleY);
-            hash = djb2(hash, shape.PathShearX);
-            hash = djb2(hash, shape.PathShearY);
-            hash = djb2(hash, (byte)shape.PathTwist);
-            hash = djb2(hash, (byte)shape.PathTwistBegin);
-            hash = djb2(hash, (byte)shape.PathRadiusOffset);
-            hash = djb2(hash, (byte)shape.PathTaperX);
-            hash = djb2(hash, (byte)shape.PathTaperY);
-            hash = djb2(hash, shape.PathRevolutions);
-            hash = djb2(hash, (byte)shape.PathSkew);
-            hash = djb2(hash, shape.ProfileBegin);
-            hash = djb2(hash, shape.ProfileEnd);
-            hash = djb2(hash, shape.ProfileHollow);
-
-            // Include LOD in hash, accounting for endianness
-            byte[] lodBytes = new byte[4];
-            Buffer.BlockCopy(BitConverter.GetBytes((int)lod), 0, lodBytes, 0, 4);
-            if (!BitConverter.IsLittleEndian)
-            {
-                Array.Reverse(lodBytes, 0, 4);
-            }
-
-            foreach (byte t in lodBytes)
-                hash = djb2(hash, t);
-
-            // include sculpt UUID
-            if (shape.SculptEntry)
-            {
-                var sculptUUIDBytes = shape.SculptTexture.GetBytes();
-                foreach (byte t in sculptUUIDBytes)
-                    hash = djb2(hash, t);
-
-                hash = djb2(hash, shape.SculptType);
-            }
-
-            return hash;
-        }
-
-        /// <summary>
-        /// Returns a hash value calculated from face parameters that would affect
-        /// the appearance of the mesh faces but not their shape
-        /// </summary>
-        /// <param name="faces"></param>
-        /// <returns></returns>
-        public ulong GetMeshMaterialHash(FacetedMesh mesh, Primitive prim)
-        {
-            ulong hash = 5381;
-
-            var numFaces = mesh.Faces.Count;
-            for (int i = 0; i < numFaces; i++)
-            {
-                Primitive.TextureEntryFace teFace = prim.Textures.GetFace((uint)i);
-                hash = djb2(hash, (ushort) teFace.Bump);
-                hash = djb2(hash, (byte) (teFace.Fullbright ? 1 : 0));
-                hash = djb2(hash, BitConverter.GetBytes(teFace.Glow));
-                hash = djb2(hash, (byte) (teFace.MediaFlags ? 1 : 0));
-                hash = djb2(hash, BitConverter.GetBytes(teFace.OffsetU));
-                hash = djb2(hash, BitConverter.GetBytes(teFace.OffsetV));
-                hash = djb2(hash, BitConverter.GetBytes(teFace.RepeatU));
-                hash = djb2(hash, BitConverter.GetBytes(teFace.RepeatV));
-                hash = djb2(hash, BitConverter.GetBytes(teFace.Rotation));
-                hash = djb2(hash, teFace.RGBA.GetBytes());
-                hash = djb2(hash, (byte)teFace.Shiny);
-                hash = djb2(hash, (byte)teFace.TexMapType);
-                hash = djb2(hash, teFace.TextureID.GetBytes());
-            }
-
-            return hash;
-        }
-
-        private ulong djb2(ulong hash, byte c)
-        {
-            return ((hash << 5) + hash) + (ulong)c;
-        }
-
-        private ulong djb2(ulong hash, ushort c)
-        {
-            hash = ((hash << 5) + hash) + (ulong)((byte)c);
-            return ((hash << 5) + hash) + (ulong)(c >> 8);
-        }
-
-        private ulong djb2(ulong hash, byte[] bytes)
-        {
-            return bytes.Aggregate(hash, (current, b) => djb2(current, b));
-        }
-
-        private PrimDisplayData ExtractPrimMesh(SceneObjectPart part, LoaderParams parms, HashSet<UUID> fullPermTextures)  
+        private PrimDisplayData ExtractPrimMesh(SceneObjectPart part, GroupLoader.LoaderParams parms, HashSet<UUID> fullPermTextures)  
         {
             Primitive prim = part.Shape.ToOmvPrimitive(part.OffsetPosition, part.RotationOffset);
             //always generate at scale 1.0 and export the true scale for each part
@@ -454,8 +350,8 @@ namespace InWorldz.PrimExporter.ExpLib
             return new PrimDisplayData { Mesh = mesh, IsRootPrim = part.IsRootPart(),
                 OffsetPosition = part.OffsetPosition, OffsetRotation = part.RotationOffset,
                 Scale = part.Scale,
-                ShapeHash = GetMeshShapeHash(part.Shape, DetailLevel.Highest),
-                MaterialHash = GetMeshMaterialHash(mesh, prim)
+                ShapeHash = _objectHasher.GetMeshShapeHash(part.Shape, DetailLevel.Highest),
+                MaterialHash = _objectHasher.GetMeshMaterialHash(mesh, prim)
             };
         }
 

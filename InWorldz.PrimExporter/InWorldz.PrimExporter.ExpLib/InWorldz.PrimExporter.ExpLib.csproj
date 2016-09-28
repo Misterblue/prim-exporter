@@ -130,7 +130,8 @@
     <Compile Include="ImportExport\ThreeJSONPrimFaceCombiner.cs" />
     <Compile Include="ImportExport\ThreeJSONFormatter.cs" />
     <Compile Include="GroupLoader.cs" />
-    <Compile Include="ImportExport\TrackedMaterial.cs" />
+    <Compile Include="ImportExport\TrackedTexture.cs" />
+    <Compile Include="ObjectHasher.cs" />
     <Compile Include="PrimDisplayData.cs" />
     <Compile Include="PrimFace\FaceData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

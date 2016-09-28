@@ -11,6 +11,7 @@ namespace InWorldz.PrimExporter.ExpLib
     public class GroupDisplayData
     {
         public IEnumerable<PrimDisplayData> Prims;
+        public PrimDisplayData RootPrim;
         public string ObjectName;
         public string CreatorName;
     }

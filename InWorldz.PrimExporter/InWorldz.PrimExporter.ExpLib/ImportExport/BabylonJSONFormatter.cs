@@ -7,6 +7,7 @@ using System.Drawing.Imaging;
 using OpenMetaverse;
 using System.IO;
 using System.Drawing.Drawing2D;
+using System.Linq;
 
 namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
@@ -15,15 +16,21 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
     /// </summary>
     public class BabylonJSONFormatter : IExportFormatter
     {
+        private readonly ObjectHasher _objHasher = new ObjectHasher();
+        
         public ExportResult Export(GroupDisplayData datas)
         {
             ExportResult result = new ExportResult();
-            Dictionary<UUID, TrackedMaterial> materialTracker = new Dictionary<UUID, TrackedMaterial>();
+            Dictionary<UUID, TrackedTexture> textureTracker = new Dictionary<UUID, TrackedTexture>();
+            Dictionary<ulong, string> materialTracker = new Dictionary<ulong, string>();
             string tempPath = Path.GetTempPath();
 
-            foreach (var data in datas.Prims)
+            var rootPrim = ExportSingle(datas.RootPrim, textureTracker, materialTracker, null, "png", result.TextureFiles,
+                tempPath);
+
+            foreach (var data in datas.Prims.Where(p => p != datas.RootPrim))
             {
-                result.Combine(ExportSingle(data, materialTracker, UUID.Random(), "png", result.TextureFiles, tempPath));
+                result.Combine(ExportSingle(data, textureTracker, materialTracker, rootPrim.Id, "png", result.TextureFiles, tempPath));
             }
 
             result.ObjectName = datas.ObjectName;
@@ -34,11 +41,12 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
         public ExportResult Export(PrimDisplayData data)
         {
-            Dictionary<UUID, TrackedMaterial> materialTracker = new Dictionary<UUID, TrackedMaterial>();
+            Dictionary<UUID, TrackedTexture> textureTracker = new Dictionary<UUID, TrackedTexture>();
+            Dictionary<ulong, string> materialTracker = new Dictionary<ulong, string>();
             List<string> fileRecord = new List<string>();
             string tempPath = Path.GetTempPath();
 
-            ExportResult result = ExportSingle(data, materialTracker, UUID.Random(), "png", fileRecord, tempPath);
+            ExportResult result = ExportSingle(data, textureTracker, materialTracker, null, "png", fileRecord, tempPath);
 
             result.TextureFiles = fileRecord;
 
@@ -53,7 +61,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         /// <param name="fileRecord"></param>
         /// <param name="tempPath"></param>
         /// <returns></returns>
-        private KeyValuePair<UUID, TrackedMaterial> WriteMaterialTexture(UUID textureAssetId, string textureName, string tempPath, List<string> fileRecord)
+        private KeyValuePair<UUID, TrackedTexture> WriteMaterialTexture(UUID textureAssetId, string textureName, string tempPath, List<string> fileRecord)
         {
             const int MAX_IMAGE_SIZE = 512;
 
@@ -73,8 +81,8 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 fileRecord.Add(fileName);
             }
 
-            KeyValuePair<UUID, TrackedMaterial> retMaterial = new KeyValuePair<UUID, TrackedMaterial>(textureAssetId,
-                new TrackedMaterial { HasAlpha = hasAlpha, Name = textureName });
+            KeyValuePair<UUID, TrackedTexture> retMaterial = new KeyValuePair<UUID, TrackedTexture>(textureAssetId,
+                new TrackedTexture { HasAlpha = hasAlpha, Name = textureName });
 
             return retMaterial;
         }
@@ -114,25 +122,33 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             return false;
         }
 
-        private ExportResult ExportSingle(PrimDisplayData data, Dictionary<UUID, TrackedMaterial> materialTracker, UUID index,
+        private ExportResult ExportSingle(PrimDisplayData data, 
+            Dictionary<UUID, TrackedTexture> textureTracker,
+            Dictionary<ulong, string> materialTracker, string rootId,
             string materialType, List<string> textureFileRecord, string tempPath)
         {
             ExportResult result = new ExportResult();
+            
+            var idAndJsonString = SerializeCombinedFaces(rootId, data, textureTracker, materialTracker, 
+                materialType, textureFileRecord, tempPath);
 
-            List<OpenMetaverse.Primitive.TextureEntryFace> materials;
-            string jsonString = this.SerializeCombinedFaces(index, data, out materials, materialTracker, materialType, textureFileRecord, tempPath);
+            result.Id = idAndJsonString.Item1;
 
             result.FaceBytes = new List<byte[]>();
-            result.FaceBytes.Add(Encoding.UTF8.GetBytes(jsonString));
+            result.FaceBytes.Add(Encoding.UTF8.GetBytes(idAndJsonString.Item2));
 
             result.BaseObjects.Add(data);
 
             return result;
         }
 
-        private string SerializeCombinedFaces(
-            UUID index, PrimDisplayData data, out List<OpenMetaverse.Primitive.TextureEntryFace> materials, 
-            Dictionary<UUID, TrackedMaterial> materialTracker,
+        /// <summary>
+        /// Serializes the combined faces and returns a mesh
+        /// </summary>
+        private Tuple<string, string> SerializeCombinedFaces(
+            string parentId, PrimDisplayData data, 
+            Dictionary<UUID, TrackedTexture> textureTracker,
+            Dictionary<ulong, string> materialTracker, 
             string materialType, List<string> textureFileRecord, string tempPath)
         {
             BabylonJSONPrimFaceCombiner combiner = new BabylonJSONPrimFaceCombiner();
@@ -140,66 +156,125 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             {
                 combiner.CombineFace(face);
             }           
-
-            var babylonFile = new
-            {
-                meshes = new List<object>(),
-                materials = new List<object>(),
-                textures = new List<object>()
-            };  
-
             
-            List<object> jsMaterials = new List<object>();
+            
+            List<ulong> materialsList = new List<ulong>();
             for (int i = 0; i < combiner.Materials.Count; i++)
             {
                 var material = combiner.Materials[i];
                 float shinyPercent = ShinyToPercent(material.Shiny);
 
-                bool hasMaterial = material.TextureID != OpenMetaverse.UUID.Zero;
+                bool hasTexture = material.TextureID != OpenMetaverse.UUID.Zero;
 
                 //check the material tracker, if we already have this texture, don't export it again
-                TrackedMaterial trackedMaterial = null;
+                TrackedTexture trackedTexture = null;
 
-                if (hasMaterial)
+                if (hasTexture)
                 {
-                    if (materialTracker.ContainsKey(material.TextureID))
+                    if (textureTracker.ContainsKey(material.TextureID))
                     {
-                        trackedMaterial = materialTracker[material.TextureID];
+                        trackedTexture = textureTracker[material.TextureID];
                     }
                     else
                     {
                         string materialMapName = $"tex_mat_{material.TextureID}.{materialType}";
                         var kvp = this.WriteMaterialTexture(material.TextureID, materialMapName, tempPath, textureFileRecord);
                             
-                        materialTracker.Add(kvp.Key, kvp.Value);
+                        textureTracker.Add(kvp.Key, kvp.Value);
 
-                        trackedMaterial = kvp.Value;
+                        trackedTexture = kvp.Value;
                     }
                 }
 
-                bool hasTransparent = material.RGBA.A < 1.0f || (trackedMaterial != null && trackedMaterial.HasAlpha);
-                
-                var jsMaterial = new
+                var matHash = _objHasher.GetMaterialFaceHash(material);
+                if (! materialTracker.ContainsKey(matHash))
                 {
-                    name = data.MaterialHash.ToString(),
-                    id = data.MaterialHash.ToString(),
-                    ambient = new [] { material.RGBA.R, material.RGBA.G, material.RGBA.B },
-                    diffuse = new [] { material.RGBA.R, material.RGBA.G, material.RGBA.B },
-                    specular = new [] { material.RGBA.R * shinyPercent, material.RGBA.G * shinyPercent, material.RGBA.B * shinyPercent },
-                    emissive = new[] { 0.01f, 0.01f, 0.01f },
-                    alpha = hasTransparent,
-                    backFaceCulling = true,
-                    wireframe = false,
-                    diffuseTexture = hasMaterial ? trackedMaterial.Name : null,
-                    
-                };
-                jsMaterials.Add(jsMaterial);
+                    bool hasTransparent = material.RGBA.A < 1.0f || (trackedTexture != null && trackedTexture.HasAlpha);
 
+                    var jsMaterial = new
+                    {
+                        name = matHash.ToString(),
+                        id = matHash.ToString(),
+                        ambient = new[] { material.RGBA.R, material.RGBA.G, material.RGBA.B },
+                        diffuse = new[] { material.RGBA.R, material.RGBA.G, material.RGBA.B },
+                        specular = new[] { material.RGBA.R * shinyPercent, material.RGBA.G * shinyPercent, material.RGBA.B * shinyPercent },
+                        emissive = new[] { 0.01f, 0.01f, 0.01f },
+                        alpha = hasTransparent,
+                        backFaceCulling = true,
+                        wireframe = false,
+                        diffuseTexture = hasTexture ? trackedTexture.Name : null,
+                        useLightmapAsShadowmap = false,
+                        checkReadOnlyOnce = true
+                    };
+                    
+                    materialTracker.Add(matHash, JsonSerializer.SerializeToString(jsMaterial));
+                }
+
+                materialsList.Add(matHash);
+            }
+            
+            //create the multimaterial
+            var multiMaterial = new
+            {
+                name = data.MaterialHash + "_mm",
+                id = data.MaterialHash.ToString(),
+                materials = materialsList
+            };
+
+
+            //finally serialize the mesh
+            Vector3 pos = data.IsRootPrim ? Vector3.Zero : data.OffsetPosition;
+            Quaternion rot = data.IsRootPrim ? Quaternion.Identity : data.OffsetRotation;
+
+            float[] identity4x4 = 
+            {
+                1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f
+            };
+
+            List<object> submeshes = new List<object>();
+            foreach (var subMesh in combiner.SubMeshes)
+            {
+                submeshes.Add(new
+                {
+                    materialIndex = subMesh.MaterialIndex,
+                    verticesStart = subMesh.VerticesStart,
+                    verticesCount = subMesh.VerticesCount,
+                    indexStart = subMesh.IndexStart,
+                    indexCount = subMesh.IndexCount
+                });
             }
 
-            materials = combiner.Materials;
+            var primId = data.ShapeHash + "_" + data.MaterialHash;
+            var mesh = new
+            {
+                name = primId,
+                id = primId,
+                materialId = data.MaterialHash.ToString(),
+                position = new [] {pos.X, pos.Y, pos.Z},
+                rotationQuaternion = new[] { rot.X, rot.Y, rot.Z, rot.W },
+                scaling = new[] {data.Scale.X, data.Scale.Y, data.Scale.Z},
+                pivotMatrix = identity4x4,
+                infiniteDistance = false,
+                showBoundingBox = false,
+                showSubMeshesBoundingBox = false,
+                isVisible = true,
+                isEnabled = true,
+                pickable = true,
+                applyFog = false,
+                checkCollisions = false,
+                receiveShadows = true,
+                positions = combiner.Vertices,
+                normals = combiner.Normals,
+                uvs = combiner.UVs,
+                indices = combiner.Indices,
+                subMeshes = submeshes,
+                autoAnimate = false
+            };
 
-            return JsonSerializer.SerializeToString(babylonFile);
+            return new Tuple<string, string>(primId, JsonSerializer.SerializeToString(mesh));
         }
 
         private float ShinyToPercent(OpenMetaverse.Shininess shininess)
