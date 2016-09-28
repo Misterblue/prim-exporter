@@ -131,30 +131,24 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         }
 
         private string SerializeCombinedFaces(
-            UUID index, PrimDisplayData data, out List<OpenMetaverse.Primitive.TextureEntryFace> materials, Dictionary<UUID, TrackedMaterial> materialTracker,
+            UUID index, PrimDisplayData data, out List<OpenMetaverse.Primitive.TextureEntryFace> materials, 
+            Dictionary<UUID, TrackedMaterial> materialTracker,
             string materialType, List<string> textureFileRecord, string tempPath)
         {
             BabylonJSONPrimFaceCombiner combiner = new BabylonJSONPrimFaceCombiner();
             foreach (var face in data.Mesh.Faces)
             {
                 combiner.CombineFace(face);
-            }
-            
+            }           
 
-            var meta = new
+            var babylonFile = new
             {
-                formatVersion = 3.1,
-                generatedBy = "InWorldz.PrimExporter",
-                vertices = combiner.Vertices.Count,
-                //faces = combiner.TotalFaces,
-                normals = combiner.Normals.Count / 3,
-                colors = 0,
-                uvs = combiner.UVs.Count / 2,
-                materials = combiner.Materials.Count,
-                morphTargets = 0,
-                bones = 0
-            };
+                meshes = new List<object>(),
+                materials = new List<object>(),
+                textures = new List<object>()
+            };  
 
+            
             List<object> jsMaterials = new List<object>();
             for (int i = 0; i < combiner.Materials.Count; i++)
             {
@@ -174,9 +168,9 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                     }
                     else
                     {
-                        string materialMapName = String.Format("tex_mat_{0}_{1}." + materialType, index.ToString(), i);
+                        string materialMapName = $"tex_mat_{material.TextureID}.{materialType}";
                         var kvp = this.WriteMaterialTexture(material.TextureID, materialMapName, tempPath, textureFileRecord);
-
+                            
                         materialTracker.Add(kvp.Key, kvp.Value);
 
                         trackedMaterial = kvp.Value;
@@ -184,39 +178,28 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 }
 
                 bool hasTransparent = material.RGBA.A < 1.0f || (trackedMaterial != null && trackedMaterial.HasAlpha);
-
+                
                 var jsMaterial = new
                 {
-                    colorAmbient = new float[] { material.RGBA.R, material.RGBA.G, material.RGBA.B },
-                    colorDiffuse = new float[] { material.RGBA.R, material.RGBA.G, material.RGBA.B },
-                    colorSpecular = new float[] { material.RGBA.R * shinyPercent, material.RGBA.G * shinyPercent, material.RGBA.B * shinyPercent },
-                    mapDiffuse = hasMaterial ? trackedMaterial.Name : null,
-                    mapDiffuseWrap = hasMaterial ? new string[] { "repeat", "repeat" } : null,
-                    shading = "Phong",
-                    specularCoef = 50,
-                    transparency = material.RGBA.A,
-                    transparent = hasTransparent ? true : false,
+                    name = data.MaterialHash.ToString(),
+                    id = data.MaterialHash.ToString(),
+                    ambient = new [] { material.RGBA.R, material.RGBA.G, material.RGBA.B },
+                    diffuse = new [] { material.RGBA.R, material.RGBA.G, material.RGBA.B },
+                    specular = new [] { material.RGBA.R * shinyPercent, material.RGBA.G * shinyPercent, material.RGBA.B * shinyPercent },
+                    emissive = new[] { 0.01f, 0.01f, 0.01f },
+                    alpha = hasTransparent,
+                    backFaceCulling = true,
+                    wireframe = false,
+                    diffuseTexture = hasMaterial ? trackedMaterial.Name : null,
+                    
                 };
                 jsMaterials.Add(jsMaterial);
 
             }
 
-            var body = new
-            {
-                metadata = meta,
-                scale = 1.0,
-                materials = jsMaterials,
-                vertices = combiner.Vertices,
-                morphTargets = new int[0],
-                normals = combiner.Normals,
-                colors = new float[0],
-                uvs = new float[][] { combiner.UVs.ToArray() },
-                //faces = combiner.EncodedIndices
-            };
-
             materials = combiner.Materials;
 
-            return JsonSerializer.SerializeToString(body);
+            return JsonSerializer.SerializeToString(babylonFile);
         }
 
         private float ShinyToPercent(OpenMetaverse.Shininess shininess)
