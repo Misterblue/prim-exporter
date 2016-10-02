@@ -53,7 +53,7 @@ namespace InWorldz.PrimExporter.ExpLib
         {
             var dir = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-            IniConfigSource config = new IniConfigSource(System.IO.Path.Combine(dir, "OpenSim.ini"));
+            IniConfigSource config = new IniConfigSource(System.IO.Path.Combine(dir, "Halcyon.ini"));
             var settings = new OpenSim.Framework.ConfigSettings();
             settings.SettingsFile = config.Configs;
 

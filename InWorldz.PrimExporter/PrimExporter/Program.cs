@@ -33,9 +33,44 @@ namespace PrimExporter
             { "?|help",         "Prints this help message",                                 v => _help = v != null }
         };
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
-            //Args must be [userid, inv item id, formatter, primlimit, checks, outputdir]
+            try
+            {
+                var extra = _options.Parse(args);
+                if (extra.Count != 0)
+                {
+                    Console.Error.WriteLine($"Invalid option: {extra[0]}");
+                    PrintUsage();
+                    return 1;
+                }
+            }
+            catch (OptionException)
+            {
+                PrintUsage();
+                return 2;
+            }
+            
+            if (args.Length == 0 || _help)
+            {
+                PrintUsage();
+                return 0;
+            }
+
+            if (_formatter == null)
+            {
+                Console.Error.WriteLine("formatter option is required");
+                PrintUsage();
+                return 3;
+            }
+
+            if (_packager == null)
+            {
+                Console.Error.WriteLine("packager option is required");
+                PrintUsage();
+                return 4;
+            }
+
             ExpLib.Init();
 
             GroupLoader.LoaderParams parms = new GroupLoader.LoaderParams
@@ -50,9 +85,15 @@ namespace PrimExporter
                 string input = Console.In.ReadToEnd();
                 data = GroupLoader.Instance.LoadFromXML(input, parms);
             }
-            else
+            else if (_userId != UUID.Zero && _invItemId != UUID.Zero)
             {
                 data = GroupLoader.Instance.Load(_userId, _invItemId, parms);
+            }
+            else
+            {
+                Console.Error.WriteLine("Either stream or userid and invitemid are required parameters");
+                PrintUsage();
+                return 5;
             }
 
             IExportFormatter formatter = ExportFormatterFactory.Instance.Get(_formatter);
@@ -62,6 +103,14 @@ namespace PrimExporter
             packager.CreatePackage(res, _outputDir);
 
             ExpLib.ShutDown();
+
+            return 0;
+        }
+
+        private static void PrintUsage()
+        {
+            Console.Out.WriteLine("Usage:");
+            _options.WriteOptionDescriptions(Console.Out);
         }
     }
 }
