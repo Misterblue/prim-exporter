@@ -21,16 +21,14 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public ExportResult Export(GroupDisplayData datas)
         {
             ExportResult result = new ExportResult();
-            Dictionary<UUID, TrackedTexture> textureTracker = new Dictionary<UUID, TrackedTexture>();
-            Dictionary<ulong, string> materialTracker = new Dictionary<ulong, string>();
+            BabylonOutputs outputs = new BabylonOutputs();
             string tempPath = Path.GetTempPath();
 
-            var rootPrim = ExportSingle(datas.RootPrim, textureTracker, materialTracker, null, "png", result.TextureFiles,
-                tempPath);
+            var rootPrim = ExportSingle(datas.RootPrim, null, "png", tempPath, outputs);
 
             foreach (var data in datas.Prims.Where(p => p != datas.RootPrim))
             {
-                result.Combine(ExportSingle(data, textureTracker, materialTracker, rootPrim.Id, "png", result.TextureFiles, tempPath));
+                result.Combine(ExportSingle(data, rootPrim.Id, "png", tempPath, outputs));
             }
 
             result.ObjectName = datas.ObjectName;
@@ -41,14 +39,11 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
         public ExportResult Export(PrimDisplayData data)
         {
-            Dictionary<UUID, TrackedTexture> textureTracker = new Dictionary<UUID, TrackedTexture>();
-            Dictionary<ulong, string> materialTracker = new Dictionary<ulong, string>();
-            List<string> fileRecord = new List<string>();
+            BabylonOutputs outputs = new BabylonOutputs();
             string tempPath = Path.GetTempPath();
 
-            ExportResult result = ExportSingle(data, textureTracker, materialTracker, null, "png", fileRecord, tempPath);
-
-            result.TextureFiles = fileRecord;
+            ExportResult result = ExportSingle(data, null, "png", tempPath, outputs);
+            result.TextureFiles = outputs.TextureFiles;
 
             return result;
         }
@@ -61,9 +56,10 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         /// <param name="fileRecord"></param>
         /// <param name="tempPath"></param>
         /// <returns></returns>
-        private KeyValuePair<UUID, TrackedTexture> WriteMaterialTexture(UUID textureAssetId, string textureName, string tempPath, List<string> fileRecord)
+        private KeyValuePair<UUID, TrackedTexture> WriteMaterialTexture(UUID textureAssetId, string textureName, 
+            string tempPath, List<string> fileRecord)
         {
-            const int MAX_IMAGE_SIZE = 512;
+            const int MAX_IMAGE_SIZE = 1024;
 
             Image img = null;
             bool hasAlpha = false;
@@ -122,15 +118,12 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             return false;
         }
 
-        private ExportResult ExportSingle(PrimDisplayData data, 
-            Dictionary<UUID, TrackedTexture> textureTracker,
-            Dictionary<ulong, string> materialTracker, string rootId,
-            string materialType, List<string> textureFileRecord, string tempPath)
+        private ExportResult ExportSingle(PrimDisplayData data, string rootId,
+            string materialType, string tempPath, BabylonOutputs outputs)
         {
             ExportResult result = new ExportResult();
             
-            var idAndJsonString = SerializeCombinedFaces(rootId, data, textureTracker, materialTracker, 
-                materialType, textureFileRecord, tempPath);
+            var idAndJsonString = SerializeCombinedFaces(rootId, data, materialType, tempPath, outputs);
 
             result.Id = idAndJsonString.Item1;
 
@@ -147,9 +140,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         /// </summary>
         private Tuple<string, string> SerializeCombinedFaces(
             string parentId, PrimDisplayData data, 
-            Dictionary<UUID, TrackedTexture> textureTracker,
-            Dictionary<ulong, string> materialTracker, 
-            string materialType, List<string> textureFileRecord, string tempPath)
+            string materialType, string tempPath, BabylonOutputs outputs)
         {
             BabylonJSONPrimFaceCombiner combiner = new BabylonJSONPrimFaceCombiner();
             foreach (var face in data.Mesh.Faces)
@@ -171,23 +162,23 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
                 if (hasTexture)
                 {
-                    if (textureTracker.ContainsKey(material.TextureID))
+                    if (outputs.Textures.ContainsKey(material.TextureID))
                     {
-                        trackedTexture = textureTracker[material.TextureID];
+                        trackedTexture = outputs.Textures[material.TextureID];
                     }
                     else
                     {
                         string materialMapName = $"tex_mat_{material.TextureID}.{materialType}";
-                        var kvp = this.WriteMaterialTexture(material.TextureID, materialMapName, tempPath, textureFileRecord);
-                            
-                        textureTracker.Add(kvp.Key, kvp.Value);
+                        var kvp = this.WriteMaterialTexture(material.TextureID, materialMapName, tempPath, outputs.TextureFiles);
+
+                        outputs.Textures.Add(kvp.Key, kvp.Value);
 
                         trackedTexture = kvp.Value;
                     }
                 }
 
                 var matHash = _objHasher.GetMaterialFaceHash(material);
-                if (! materialTracker.ContainsKey(matHash))
+                if (! outputs.Materials.ContainsKey(matHash))
                 {
                     bool hasTransparent = material.RGBA.A < 1.0f || (trackedTexture != null && trackedTexture.HasAlpha);
 
@@ -207,20 +198,24 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                         checkReadOnlyOnce = true
                     };
                     
-                    materialTracker.Add(matHash, JsonSerializer.SerializeToString(jsMaterial));
+                    outputs.Materials.Add(matHash, JsonSerializer.SerializeToString(jsMaterial));
                 }
 
                 materialsList.Add(matHash);
             }
-            
-            //create the multimaterial
-            var multiMaterial = new
-            {
-                name = data.MaterialHash + "_mm",
-                id = data.MaterialHash.ToString(),
-                materials = materialsList
-            };
 
+            if (!outputs.MultiMaterials.ContainsKey(data.MaterialHash))
+            {
+                //create the multimaterial
+                var multiMaterial = new
+                {
+                    name = data.MaterialHash.ToString(),
+                    id = data.MaterialHash.ToString(),
+                    materials = materialsList
+                };
+
+                outputs.MultiMaterials[data.MaterialHash] = JsonSerializer.SerializeToString(multiMaterial);
+            }
 
             //finally serialize the mesh
             Vector3 pos = data.IsRootPrim ? Vector3.Zero : data.OffsetPosition;
