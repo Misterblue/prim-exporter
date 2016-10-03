@@ -12,7 +12,6 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public List<PrimDisplayData> BaseObjects = new List<PrimDisplayData>();
         public string ObjectName;
         public string CreatorName;
-        public string Id;
 
         public void Combine(ExportResult other)
         {

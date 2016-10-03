@@ -23,32 +23,34 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             BabylonOutputs outputs = new BabylonOutputs();
             string tempPath = Path.GetTempPath();
 
-            ExportResult rootPrim = ExportSingle(datas.RootPrim, null, "png", tempPath, outputs);
-            var result = rootPrim;
+            var prims = new List<object>();
+
+            Tuple<string, object> rootPrim = SerializeCombinedFaces(null, datas.RootPrim, "png", tempPath, outputs);
+            prims.Add(rootPrim);
 
             foreach (var data in datas.Prims.Where(p => p != datas.RootPrim))
             {
-                result.Combine(ExportSingle(data, rootPrim.Id, "png", tempPath, outputs));
+                prims.Add(SerializeCombinedFaces(rootPrim.Item1, data, "png", tempPath, outputs));
             }
 
-            result.ObjectName = datas.ObjectName;
-            result.CreatorName = datas.CreatorName;
+            return PackageResult(datas.ObjectName, datas.CreatorName, outputs, prims);
+        }
 
-            //prepend the textures and multitextures
-            var oldFaceBytes = result.FaceBytes;
-            result.FaceBytes = new List<byte[]>();
-            
-            foreach (var material in outputs.Materials)
+        private static ExportResult PackageResult(string objectName, string creatorName, BabylonOutputs outputs, List<object> prims)
+        {
+            ExportResult result = new ExportResult();
+            result.ObjectName = objectName;
+            result.CreatorName = creatorName;
+
+            var babylonFile = new
             {
-                result.FaceBytes.Add(Encoding.UTF8.GetBytes(JsonSerializer.SerializeToString(material.Value)));
-            }
+                materials = outputs.Materials,
+                multiMaterials = outputs.MultiMaterials,
+                meshes = prims
+            };
 
-            foreach (var multiMaterial in outputs.MultiMaterials)
-            {
-                result.FaceBytes.Add(Encoding.UTF8.GetBytes(JsonSerializer.SerializeToString(multiMaterial.Value)));
-            }
-
-            result.FaceBytes.AddRange(oldFaceBytes);
+            result.FaceBytes.Add(Encoding.UTF8.GetBytes(JsonSerializer.SerializeToString(babylonFile)));
+            result.TextureFiles = outputs.TextureFiles;
 
             return result;
         }
@@ -58,10 +60,10 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             BabylonOutputs outputs = new BabylonOutputs();
             string tempPath = Path.GetTempPath();
 
-            ExportResult result = ExportSingle(data, null, "png", tempPath, outputs);
-            result.TextureFiles = outputs.TextureFiles;
+            Tuple<string, object> result = SerializeCombinedFaces(null, data, "png", tempPath, outputs);
+            
 
-            return result;
+            return PackageResult("object", "creator", outputs, new List<object>{result.Item2});
         }
 
         /// <summary>
@@ -134,27 +136,10 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             return false;
         }
 
-        private ExportResult ExportSingle(PrimDisplayData data, string rootId,
-            string materialType, string tempPath, BabylonOutputs outputs)
-        {
-            ExportResult result = new ExportResult();
-            
-            var idAndJsonString = SerializeCombinedFaces(rootId, data, materialType, tempPath, outputs);
-
-            result.Id = idAndJsonString.Item1;
-
-            result.FaceBytes = new List<byte[]>();
-            result.FaceBytes.Add(Encoding.UTF8.GetBytes(idAndJsonString.Item2));
-
-            result.BaseObjects.Add(data);
-
-            return result;
-        }
-
         /// <summary>
         /// Serializes the combined faces and returns a mesh
         /// </summary>
-        private Tuple<string, string> SerializeCombinedFaces(
+        private Tuple<string, object> SerializeCombinedFaces(
             string parent, PrimDisplayData data, 
             string materialType, string tempPath, BabylonOutputs outputs)
         {
@@ -286,7 +271,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 autoAnimate = false
             };
 
-            return new Tuple<string, string>(primId, JsonSerializer.SerializeToString(mesh));
+            return new Tuple<string, object>(primId, mesh);
         }
 
         private float ShinyToPercent(OpenMetaverse.Shininess shininess)
