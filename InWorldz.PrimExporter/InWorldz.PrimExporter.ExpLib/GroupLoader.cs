@@ -43,10 +43,11 @@ namespace InWorldz.PrimExporter.ExpLib
         private readonly CassandraMigrationProviderSelector _invSelector;
         private readonly MeshmerizerR _renderer = new MeshmerizerR();
         private Dictionary<UUID, string> _usernameCache = new Dictionary<UUID,string>();
-        private readonly ObjectHasher _objectHasher;
+        private readonly ObjectHasher _objectHasher = new ObjectHasher();
 
         static GroupLoader()
         {
+            
         }
 
         private GroupLoader()
@@ -145,10 +146,9 @@ namespace InWorldz.PrimExporter.ExpLib
                 }
 
                 PrimDisplayData pdd = this.ExtractPrimMesh(part, parms, fullPermTextures);
-                int vertCount = 0;
-                foreach (var face in pdd.Mesh.Faces)
+                if (pdd == null)
                 {
-                    vertCount += face.Vertices.Count;
+                    throw new NullReferenceException("Prim mesh could not be loaded");
                 }
 
                 groupData.Add(pdd);

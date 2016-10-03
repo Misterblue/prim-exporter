@@ -34,7 +34,14 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
         public IPackager Get(string name)
         {
-            return _packagers[name];
+            IPackager foundPackager;
+
+            if (! _packagers.TryGetValue(name, out foundPackager))
+            {
+                throw new KeyNotFoundException($"Packager {name} was not found");
+            }
+
+            return foundPackager;
         }
     }
 }

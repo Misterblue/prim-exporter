@@ -21,6 +21,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public static void Init()
         {
             instance.Register(new ThreeJSONFormatter(), "ThreeJSONFormatter");
+            instance.Register(new BabylonJSONFormatter(), "BabylonJSONFormatter");
         }
 
         private ExportFormatterFactory()

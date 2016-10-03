@@ -26,11 +26,11 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             var prims = new List<object>();
 
             Tuple<string, object> rootPrim = SerializeCombinedFaces(null, datas.RootPrim, "png", tempPath, outputs);
-            prims.Add(rootPrim);
+            prims.Add(rootPrim.Item2);
 
             foreach (var data in datas.Prims.Where(p => p != datas.RootPrim))
             {
-                prims.Add(SerializeCombinedFaces(rootPrim.Item1, data, "png", tempPath, outputs));
+                prims.Add(SerializeCombinedFaces(rootPrim.Item1, data, "png", tempPath, outputs).Item2);
             }
 
             return PackageResult(datas.ObjectName, datas.CreatorName, outputs, prims);

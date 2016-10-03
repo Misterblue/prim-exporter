@@ -54,13 +54,13 @@ namespace PrimExporter
             int errcode;
             if (!CheckBasicOptions(args, out errcode)) return errcode;
 
-            ExpLib.Init();
-
             GroupLoader.LoaderParams parms = new GroupLoader.LoaderParams
             {
                 PrimLimit = Convert.ToInt32(_primLimit),
                 Checks = (GroupLoader.LoaderChecks)Convert.ToInt16(_checks)
             };
+
+            ExpLib.Init();
 
             GroupDisplayData data;
             if (_stream)

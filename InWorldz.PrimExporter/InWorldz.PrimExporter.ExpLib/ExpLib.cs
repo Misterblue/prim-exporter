@@ -10,6 +10,7 @@ namespace InWorldz.PrimExporter.ExpLib
         public static void Init()
         {
             ImportExport.ExportFormatterFactory.Init();
+            ImportExport.PackagerFactory.Init();
         }
 
         public static void ShutDown()
