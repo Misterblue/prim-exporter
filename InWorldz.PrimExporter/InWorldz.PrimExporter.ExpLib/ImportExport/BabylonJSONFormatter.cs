@@ -20,11 +20,11 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         
         public ExportResult Export(GroupDisplayData datas)
         {
-            ExportResult result = new ExportResult();
             BabylonOutputs outputs = new BabylonOutputs();
             string tempPath = Path.GetTempPath();
 
-            var rootPrim = ExportSingle(datas.RootPrim, null, "png", tempPath, outputs);
+            ExportResult rootPrim = ExportSingle(datas.RootPrim, null, "png", tempPath, outputs);
+            var result = rootPrim;
 
             foreach (var data in datas.Prims.Where(p => p != datas.RootPrim))
             {
@@ -33,6 +33,22 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
             result.ObjectName = datas.ObjectName;
             result.CreatorName = datas.CreatorName;
+
+            //prepend the textures and multitextures
+            var oldFaceBytes = result.FaceBytes;
+            result.FaceBytes = new List<byte[]>();
+            
+            foreach (var material in outputs.Materials)
+            {
+                result.FaceBytes.Add(Encoding.UTF8.GetBytes(JsonSerializer.SerializeToString(material.Value)));
+            }
+
+            foreach (var multiMaterial in outputs.MultiMaterials)
+            {
+                result.FaceBytes.Add(Encoding.UTF8.GetBytes(JsonSerializer.SerializeToString(multiMaterial.Value)));
+            }
+
+            result.FaceBytes.AddRange(oldFaceBytes);
 
             return result;
         }
@@ -139,7 +155,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         /// Serializes the combined faces and returns a mesh
         /// </summary>
         private Tuple<string, string> SerializeCombinedFaces(
-            string parentId, PrimDisplayData data, 
+            string parent, PrimDisplayData data, 
             string materialType, string tempPath, BabylonOutputs outputs)
         {
             BabylonJSONPrimFaceCombiner combiner = new BabylonJSONPrimFaceCombiner();
@@ -198,7 +214,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                         checkReadOnlyOnce = true
                     };
                     
-                    outputs.Materials.Add(matHash, JsonSerializer.SerializeToString(jsMaterial));
+                    outputs.Materials.Add(matHash, jsMaterial);
                 }
 
                 materialsList.Add(matHash);
@@ -214,7 +230,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                     materials = materialsList
                 };
 
-                outputs.MultiMaterials[data.MaterialHash] = JsonSerializer.SerializeToString(multiMaterial);
+                outputs.MultiMaterials[data.MaterialHash] = multiMaterial;
             }
 
             //finally serialize the mesh
@@ -247,6 +263,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             {
                 name = primId,
                 id = primId,
+                parentId = parent,
                 materialId = data.MaterialHash.ToString(),
                 position = new [] {pos.X, pos.Y, pos.Z},
                 rotationQuaternion = new[] { rot.X, rot.Y, rot.Z, rot.W },

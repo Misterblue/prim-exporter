@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using OpenMetaverse;
@@ -12,6 +14,12 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         {
             string dirName = Path.Combine(baseDir, UUID.Random().ToString());
             Directory.CreateDirectory(dirName);
+
+            using (var outFile = File.CreateText(Path.Combine(dirName, "object.babylon")))
+            {
+                outFile.WriteLine("{");
+            }
+
 
             List<string> objectFiles = new List<string>();
 

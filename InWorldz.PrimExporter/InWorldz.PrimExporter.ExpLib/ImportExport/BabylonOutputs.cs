@@ -12,9 +12,9 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
     /// </summary>
     internal class BabylonOutputs
     {
-        public Dictionary<ulong, string> Materials { get; } = new Dictionary<ulong, string>();
+        public Dictionary<ulong, object> Materials { get; } = new Dictionary<ulong, object>();
         public Dictionary<UUID, TrackedTexture> Textures { get; } = new Dictionary<UUID, TrackedTexture>();
-        public Dictionary<ulong, string> MultiMaterials { get; } = new Dictionary<ulong, string>();
+        public Dictionary<ulong, object> MultiMaterials { get; } = new Dictionary<ulong, object>();
         public List<string> TextureFiles { get; } = new List<string>();
     }
 }
