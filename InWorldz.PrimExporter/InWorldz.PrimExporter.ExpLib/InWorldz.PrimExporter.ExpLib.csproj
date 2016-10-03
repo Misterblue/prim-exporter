@@ -119,6 +119,7 @@
     <Compile Include="GroupDisplayData.cs" />
     <Compile Include="ImportExport\BabylonJSONFormatter.cs" />
     <Compile Include="ImportExport\BabylonJSONPackager.cs" />
+    <Compile Include="ImportExport\BabylonOutputs.cs" />
     <Compile Include="ImportExport\ExportFormatterFactory.cs" />
     <Compile Include="ImportExport\ExportResult.cs" />
     <Compile Include="ImportExport\IExportFormatter.cs" />

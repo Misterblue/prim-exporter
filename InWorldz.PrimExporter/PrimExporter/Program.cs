@@ -50,26 +50,9 @@ namespace PrimExporter
                 PrintUsage();
                 return 2;
             }
-            
-            if (args.Length == 0 || _help)
-            {
-                PrintUsage();
-                return 0;
-            }
 
-            if (_formatter == null)
-            {
-                Console.Error.WriteLine("formatter option is required");
-                PrintUsage();
-                return 3;
-            }
-
-            if (_packager == null)
-            {
-                Console.Error.WriteLine("packager option is required");
-                PrintUsage();
-                return 4;
-            }
+            int errcode;
+            if (!CheckBasicOptions(args, out errcode)) return errcode;
 
             ExpLib.Init();
 
@@ -105,6 +88,51 @@ namespace PrimExporter
             ExpLib.ShutDown();
 
             return 0;
+        }
+
+        private static bool CheckBasicOptions(string[] args, out int main)
+        {
+            if (args.Length == 0 || _help)
+            {
+                PrintUsage();
+                {
+                    main = 0;
+                    return false;
+                }
+            }
+
+            if (_formatter == null)
+            {
+                Console.Error.WriteLine("formatter option is required");
+                PrintUsage();
+                {
+                    main = 3;
+                    return false;
+                }
+            }
+
+            if (_packager == null)
+            {
+                Console.Error.WriteLine("packager option is required");
+                PrintUsage();
+                {
+                    main = 4;
+                    return false;
+                }
+            }
+
+            if (_outputDir == null)
+            {
+                Console.Error.WriteLine("output option is required");
+                PrintUsage();
+                {
+                    main = 5;
+                    return false;
+                }
+            }
+
+            main = 0;
+            return true;
         }
 
         private static void PrintUsage()
