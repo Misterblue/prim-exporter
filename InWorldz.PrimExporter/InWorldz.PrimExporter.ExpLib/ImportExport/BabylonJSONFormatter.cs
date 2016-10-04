@@ -44,8 +44,8 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
             var babylonFile = new
             {
-                materials = outputs.Materials,
-                multiMaterials = outputs.MultiMaterials,
+                materials = outputs.Materials.Values,
+                multiMaterials = outputs.MultiMaterials.Values,
                 meshes = prims
             };
 
@@ -150,7 +150,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             }           
             
             
-            List<ulong> materialsList = new List<ulong>();
+            List<string> materialsList = new List<string>();
             for (int i = 0; i < combiner.Materials.Count; i++)
             {
                 var material = combiner.Materials[i];
@@ -202,16 +202,17 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                     outputs.Materials.Add(matHash, jsMaterial);
                 }
 
-                materialsList.Add(matHash);
+                materialsList.Add(matHash.ToString());
             }
 
+            var multiMaterialName = data.MaterialHash + "_mm";
             if (!outputs.MultiMaterials.ContainsKey(data.MaterialHash))
             {
                 //create the multimaterial
                 var multiMaterial = new
                 {
-                    name = data.MaterialHash.ToString(),
-                    id = data.MaterialHash.ToString(),
+                    name = multiMaterialName,
+                    id = multiMaterialName,
                     materials = materialsList
                 };
 
@@ -249,7 +250,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 name = primId,
                 id = primId,
                 parentId = parent,
-                materialId = data.MaterialHash.ToString(),
+                materialId = multiMaterialName,
                 position = new [] {pos.X, pos.Y, pos.Z},
                 rotationQuaternion = new[] { rot.X, rot.Y, rot.Z, rot.W },
                 scaling = new[] {data.Scale.X, data.Scale.Y, data.Scale.Z},
@@ -268,7 +269,8 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 uvs = combiner.UVs,
                 indices = combiner.Indices,
                 subMeshes = submeshes,
-                autoAnimate = false
+                autoAnimate = false,
+                billboardMode = 0
             };
 
             return new Tuple<string, object>(primId, mesh);

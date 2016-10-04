@@ -14,8 +14,24 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         {
             string dirName = Path.Combine(baseDir, UUID.Random().ToString());
             Directory.CreateDirectory(dirName);
+
+            //write the object
             File.WriteAllBytes(Path.Combine(dirName, "object.babylon"), res.FaceBytes[0]);
             
+            //write the manifest
+            var manifest = new
+            {
+                version = 1,
+                enableSceneOffline = true,
+                enableTexturesOffline = true
+            };
+
+            using (FileStream stream = File.OpenWrite(Path.Combine(dirName, "object.babylon.manifest")))
+            {
+                JsonSerializer.SerializeToStream(manifest, stream);
+            }
+
+            //textures..
             foreach (var img in res.TextureFiles)
             {
                 File.Move(img, Path.Combine(dirName, Path.GetFileName(img)));
