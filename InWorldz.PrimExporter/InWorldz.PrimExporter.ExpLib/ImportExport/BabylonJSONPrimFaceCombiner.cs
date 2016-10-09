@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
@@ -44,9 +45,9 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 ushort b = (ushort)(faceData.Indices[i + 1] + (verticesBase / 3));
                 ushort c = (ushort)(faceData.Indices[i + 2] + (verticesBase / 3));
 
-                Indices.Add(a);
-                Indices.Add(b);
                 Indices.Add(c);
+                Indices.Add(b);
+                Indices.Add(a);
             }
 
             SubMeshes.Add(
