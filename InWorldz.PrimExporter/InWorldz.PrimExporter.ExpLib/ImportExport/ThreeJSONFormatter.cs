@@ -216,7 +216,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                     shading = "Phong",
                     specularCoef = 50,
                     transparency = material.RGBA.A,
-                    transparent = hasTransparent ? true : false,
+                    transparent = hasTransparent,
                 };
                 jsMaterials.Add(jsMaterial);
 

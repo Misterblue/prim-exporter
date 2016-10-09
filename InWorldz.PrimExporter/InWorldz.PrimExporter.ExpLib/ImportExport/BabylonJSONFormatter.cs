@@ -183,6 +183,29 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 {
                     bool hasTransparent = material.RGBA.A < 1.0f || (trackedTexture != null && trackedTexture.HasAlpha);
 
+                    object texture = null;
+                    if (hasTexture)
+                    {
+                        texture = new
+                        {
+                            name = trackedTexture.Name,
+                            level = 1,
+                            hasAlpha = hasTransparent,
+                            getAlphaFromRGB = false,
+                            coordinatesMode = 0,
+                            uOffset = 0,
+                            vOffset = 0,
+                            uScale = 1,
+                            vScale = 1,
+                            uAng = 0,
+                            vAng = 0,
+                            wAng = 0,
+                            wrapU = true,
+                            wrapV = true,
+                            coordinatesIndex = 0
+                        };
+                    }
+
                     var jsMaterial = new
                     {
                         name = matHash.ToString(),
@@ -190,11 +213,12 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                         ambient = new[] { material.RGBA.R, material.RGBA.G, material.RGBA.B },
                         diffuse = new[] { material.RGBA.R, material.RGBA.G, material.RGBA.B },
                         specular = new[] { material.RGBA.R * shinyPercent, material.RGBA.G * shinyPercent, material.RGBA.B * shinyPercent },
+                        specularPower = 50,
                         emissive = new[] { 0.01f, 0.01f, 0.01f },
-                        alpha = hasTransparent,
+                        alpha = material.RGBA.A,
                         backFaceCulling = true,
                         wireframe = false,
-                        diffuseTexture = hasTexture ? trackedTexture.Name : null,
+                        diffuseTexture = hasTexture ? texture : null,
                         useLightmapAsShadowmap = false,
                         checkReadOnlyOnce = true
                     };
