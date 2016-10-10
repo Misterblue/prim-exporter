@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using InWorldz.PrimExporter.ExpLib;
 using InWorldz.PrimExporter.ExpLib.ImportExport;
 using OpenMetaverse;
@@ -17,6 +18,7 @@ namespace PrimExporter
         private static string _packager;
         private static bool _help;
         private static bool _stream;
+        private static string _xmlFile;
 
         private static OptionSet _options = new OptionSet()
         {
@@ -30,6 +32,7 @@ namespace PrimExporter
             { "p|packager=",    "Specifies the packager " +
                 "(ThreeJSONPackager, BabylonJSONPackager)",                                 v => _packager = v },
             { "s|stream",       "Stream XML input from STDIN",                              v => _stream = v != null },
+            { "x|xmlfile=",      "Open the given XML file for input",                        v => _xmlFile = v },
             { "?|help",         "Prints this help message",                                 v => _help = v != null }
         };
 
@@ -66,6 +69,11 @@ namespace PrimExporter
             if (_stream)
             {
                 string input = Console.In.ReadToEnd();
+                data = GroupLoader.Instance.LoadFromXML(input, parms);
+            }
+            else if (_xmlFile != null)
+            {
+                string input = File.ReadAllText(_xmlFile);
                 data = GroupLoader.Instance.LoadFromXML(input, parms);
             }
             else if (_userId != UUID.Zero && _invItemId != UUID.Zero)
