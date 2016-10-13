@@ -110,7 +110,6 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 {
                     Color c = img.GetPixel(x, y);
                     
-                    byte newBlue = (byte)((c.G + c.B) / 2);
                     Color newColor = Color.FromArgb(c.A, c.G, c.R, c.B);
 
                     if (c.A < 255) alpha = true;
