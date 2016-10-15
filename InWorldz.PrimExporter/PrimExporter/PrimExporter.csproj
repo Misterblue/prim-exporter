@@ -58,7 +58,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="OpenMetaverseTypes">
-      <HintPath>..\..\OpenMetaverseTypes.dll</HintPath>
+      <HintPath>..\..\..\halcyon\bin\OpenMetaverseTypes.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

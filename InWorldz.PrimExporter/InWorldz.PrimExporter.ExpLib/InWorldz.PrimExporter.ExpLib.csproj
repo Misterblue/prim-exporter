@@ -76,18 +76,18 @@
     </Reference>
     <Reference Include="OpenMetaverse, Version=0.0.0.16496, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\OpenMetaverse.dll</HintPath>
+      <HintPath>..\..\..\halcyon\bin\OpenMetaverse.dll</HintPath>
     </Reference>
     <Reference Include="OpenMetaverse.Rendering.Meshmerizer">
       <HintPath>..\..\OpenMetaverse.Rendering.Meshmerizer.dll</HintPath>
     </Reference>
     <Reference Include="OpenMetaverse.StructuredData, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\OpenMetaverse.StructuredData.dll</HintPath>
+      <HintPath>..\..\..\halcyon\bin\OpenMetaverse.StructuredData.dll</HintPath>
     </Reference>
     <Reference Include="OpenMetaverseTypes, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\OpenMetaverseTypes.dll</HintPath>
+      <HintPath>..\..\..\halcyon\bin\OpenMetaverseTypes.dll</HintPath>
     </Reference>
     <Reference Include="OpenSim.Data">
       <HintPath>..\..\..\halcyon\bin\OpenSim.Data.dll</HintPath>
