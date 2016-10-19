@@ -10,16 +10,16 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
     public class ThreeJSONPackager : IPackager
     {
-        public Package CreatePackage(ExportResult res, string baseDir)
+        public Package CreatePackage(ExportResult res, string baseDir, PackagerParams packagerParams)
         {
-            string dirName = Path.Combine(baseDir, UUID.Random().ToString());
+            string dirName = packagerParams.Direct ? baseDir : Path.Combine(baseDir, UUID.Random().ToString());
             Directory.CreateDirectory(dirName);
 
             List<string> objectFiles = new List<string>();
 
             foreach (var bytes in res.FaceBytes)
             {
-                string filePath = Path.Combine(dirName, UUID.Random().ToString() + ".js");
+                string filePath = Path.Combine(dirName, UUID.Random() + ".js");
                 File.WriteAllBytes(filePath, bytes);
 
                 objectFiles.Add(Path.GetFileName(filePath));
@@ -27,7 +27,13 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
             foreach (var img in res.TextureFiles)
             {
-                File.Move(img, Path.Combine(dirName, Path.GetFileName(img)));
+                var destImgPath = Path.Combine(dirName, Path.GetFileName(img));
+                if (File.Exists(destImgPath))
+                {
+                    File.Delete(destImgPath);
+                }
+
+                File.Move(img, destImgPath);
             }
                 
             List<object> offsetList = new List<object>();

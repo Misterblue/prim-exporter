@@ -10,9 +10,9 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
     public class BabylonJSONPackager : IPackager
     {
-        public Package CreatePackage(ExportResult res, string baseDir)
+        public Package CreatePackage(ExportResult res, string baseDir, PackagerParams packagerParams)
         {
-            string dirName = Path.Combine(baseDir, UUID.Random().ToString());
+            string dirName = packagerParams.Direct ? baseDir : Path.Combine(baseDir, UUID.Random().ToString());
             Directory.CreateDirectory(dirName);
 
             //write the object
@@ -34,7 +34,13 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             //textures..
             foreach (var img in res.TextureFiles)
             {
-                File.Move(img, Path.Combine(dirName, Path.GetFileName(img)));
+                var destImgPath = Path.Combine(dirName, Path.GetFileName(img));
+                if (File.Exists(destImgPath))
+                {
+                    File.Delete(destImgPath);
+                }
+
+                File.Move(img, destImgPath);
             }
 
             return new Package { Path = dirName };

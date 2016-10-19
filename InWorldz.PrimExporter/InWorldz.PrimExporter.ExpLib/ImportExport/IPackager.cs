@@ -11,6 +11,6 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
     /// </summary>
     public interface IPackager
     {
-        Package CreatePackage(ExportResult result, string baseDir);
+        Package CreatePackage(ExportResult result, string baseDir, PackagerParams packagerParams);
     }
 }

@@ -19,6 +19,7 @@ namespace PrimExporter
         private static bool _help;
         private static bool _stream;
         private static string _xmlFile;
+        private static bool _direct;
 
         private static OptionSet _options = new OptionSet()
         {
@@ -29,6 +30,7 @@ namespace PrimExporter
             { "l|primlimit=",   "Specifies a limit to the number of prims in a group",      v => _primLimit = v != null ? int.Parse(v) : 0 },
             { "c|checks=",      "Specifies the permissions checks to run",                  v => _checks = v != null ? int.Parse(v) : 0 },
             { "o|output=",      "Specifies the output directory",                           v => _outputDir = v },
+            { "d|direct",       "Dump the generated files directly in the output dir",      v => _direct = v != null },
             { "p|packager=",    "Specifies the packager " +
                 "(ThreeJSONPackager, BabylonJSONPackager)",                                 v => _packager = v },
             { "s|stream",       "Stream XML input from STDIN",                              v => _stream = v != null },
@@ -90,8 +92,10 @@ namespace PrimExporter
             IExportFormatter formatter = ExportFormatterFactory.Instance.Get(_formatter);
             ExportResult res = formatter.Export(data);
 
+            PackagerParams pp = new PackagerParams {Direct = _direct};
+
             IPackager packager = PackagerFactory.Instance.Get(_packager);
-            packager.CreatePackage(res, _outputDir);
+            packager.CreatePackage(res, _outputDir, pp);
 
             ExpLib.ShutDown();
 
