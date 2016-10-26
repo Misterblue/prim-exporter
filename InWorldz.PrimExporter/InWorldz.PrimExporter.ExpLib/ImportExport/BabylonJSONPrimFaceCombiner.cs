@@ -60,9 +60,6 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             
             UVs.AddRange(faceData.TexCoords);
                 
-            //dump a material for the entire VIEWER FACE
-            Materials.Add(face.TextureFace);
-
             for (int i = 0; i < faceData.Indices.Length; i += 3)
             {
                 ushort a = (ushort)(faceData.Indices[i] + (verticesBase / 3));
@@ -86,10 +83,13 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             }
             else
             {
+                //dump a material for the entire VIEWER FACE
+                Materials.Add(face.TextureFace);
+
                 SubMeshes.Add(
                     new SubmeshDesc
                     {
-
+                        MaterialHash = matHash,
                         MaterialIndex = materialBase,
                         VerticesStart = verticesBase,
                         VerticesCount = Vertices.Count - verticesBase,
