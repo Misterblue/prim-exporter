@@ -268,7 +268,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 });
             }
 
-            var primId = data.ShapeHash + "_" + data.MaterialHash;
+            var primId = data.ShapeHash + "_" + data.MaterialHash + "-" + Guid.NewGuid();
             var mesh = new
             {
                 name = primId,
