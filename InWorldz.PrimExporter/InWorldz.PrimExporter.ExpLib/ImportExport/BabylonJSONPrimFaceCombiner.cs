@@ -1,20 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
     public class BabylonJSONPrimFaceCombiner
     {
+        private readonly ObjectHasher _objHasher = new ObjectHasher();
+
         public class SubmeshDesc
         {
+            public ulong MaterialHash { get; set; }
             public int MaterialIndex { get; set; }
             public int VerticesStart { get; set; }
             public int VerticesCount { get; set; }
             public int IndexStart { get; set; }
             public int IndexCount { get; set; }
         }
-
 
         public List<ushort> Indices = new List<ushort>();
         public List<float> Vertices = new List<float>();
@@ -73,15 +74,30 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 Indices.Add(c);
             }
 
-            SubMeshes.Add(
-                new SubmeshDesc
-                {
-                    MaterialIndex = materialBase,
-                    VerticesStart = verticesBase,
-                    VerticesCount = Vertices.Count - verticesBase,
-                    IndexStart = indexBase,
-                    IndexCount = Indices.Count - indexBase
-                });
+            //if this submesh and the last are using identical materials, 
+            //combine them into a single face
+            ulong matHash = _objHasher.GetMaterialFaceHash(face.TextureFace);
+            var lastSubMesh = SubMeshes.Last();
+            if (SubMeshes.Count > 0 &&  lastSubMesh.MaterialHash == matHash)
+            {
+                //combine.. just add to the vertex/index counts
+                lastSubMesh.VerticesCount += Vertices.Count - verticesBase;
+                lastSubMesh.IndexCount += Indices.Count - indexBase;
+            }
+            else
+            {
+                SubMeshes.Add(
+                    new SubmeshDesc
+                    {
+
+                        MaterialIndex = materialBase,
+                        VerticesStart = verticesBase,
+                        VerticesCount = Vertices.Count - verticesBase,
+                        IndexStart = indexBase,
+                        IndexCount = Indices.Count - indexBase
+                    });
+            }
+            
         }
     }
 }

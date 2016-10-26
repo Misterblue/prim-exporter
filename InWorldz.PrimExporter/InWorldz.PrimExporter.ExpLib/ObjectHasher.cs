@@ -107,21 +107,7 @@ namespace InWorldz.PrimExporter.ExpLib
         public ulong GetMaterialFaceHash(Primitive.TextureEntryFace teFace)
         {
             ulong hash = 5381;
-
-            hash = djb2(hash, (ushort)teFace.Bump);
-            hash = djb2(hash, (byte)(teFace.Fullbright ? 1 : 0));
-            hash = djb2(hash, BitConverter.GetBytes(teFace.Glow));
-            hash = djb2(hash, (byte)(teFace.MediaFlags ? 1 : 0));
-            hash = djb2(hash, BitConverter.GetBytes(teFace.OffsetU));
-            hash = djb2(hash, BitConverter.GetBytes(teFace.OffsetV));
-            hash = djb2(hash, BitConverter.GetBytes(teFace.RepeatU));
-            hash = djb2(hash, BitConverter.GetBytes(teFace.RepeatV));
-            hash = djb2(hash, BitConverter.GetBytes(teFace.Rotation));
-            hash = djb2(hash, teFace.RGBA.GetBytes());
-            hash = djb2(hash, (byte)teFace.Shiny);
-            hash = djb2(hash, (byte)teFace.TexMapType);
-            hash = djb2(hash, teFace.TextureID.GetBytes());
-            return hash;
+            return GetMaterialFaceHash(hash, teFace);
         }
 
         private ulong djb2(ulong hash, byte c)
