@@ -77,8 +77,8 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             //if this submesh and the last are using identical materials, 
             //combine them into a single face
             ulong matHash = _objHasher.GetMaterialFaceHash(face.TextureFace);
-            var lastSubMesh = SubMeshes.Last();
-            if (SubMeshes.Count > 0 &&  lastSubMesh.MaterialHash == matHash)
+            var lastSubMesh = SubMeshes.LastOrDefault();
+            if (lastSubMesh != null && lastSubMesh.MaterialHash == matHash)
             {
                 //combine.. just add to the vertex/index counts
                 lastSubMesh.VerticesCount += Vertices.Count - verticesBase;
