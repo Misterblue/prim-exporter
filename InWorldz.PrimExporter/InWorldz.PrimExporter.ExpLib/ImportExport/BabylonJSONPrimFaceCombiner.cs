@@ -103,6 +103,17 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 }
             }
 
+            //create the final material/submesh
+            SubMeshes.Add(
+                new SubmeshDesc
+                {
+                    MaterialIndex = lastMat,
+                    VerticesStart = vertStart,
+                    VerticesCount = deduplicatedVertices.Count - vertStart,
+                    IndexStart = indexStart,
+                    IndexCount = newIndexes.Count - indexStart
+                });
+
             //dump the new vertices, normals and UVs
             Vertices.AddRange(deduplicatedVertices.SelectMany(v => new[] { v.Item1.X, v.Item1.Y, v.Item1.Z }));
             Normals.AddRange(deduplicatedVertices.SelectMany(v => new[] { v.Item3.X, v.Item3.Y, v.Item3.Z }));
