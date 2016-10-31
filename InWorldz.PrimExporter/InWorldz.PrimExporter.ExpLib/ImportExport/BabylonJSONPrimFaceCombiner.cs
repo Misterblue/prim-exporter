@@ -20,6 +20,30 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             public int IndexCount { get; set; }
         }
 
+        /// <summary>
+        /// Comparer for comparing two keys, handling equality as beeing greater
+        /// Use this Comparer e.g. with SortedLists or SortedDictionaries, that don't allow duplicate keys
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        public class DuplicateKeyComparer<TKey>
+                        :
+                     IComparer<TKey> where TKey : IComparable
+        {
+            #region IComparer<TKey> Members
+
+            public int Compare(TKey x, TKey y)
+            {
+                int result = x.CompareTo(y);
+
+                if (result == 0)
+                    return 1;   // Handle equality as beeing greater
+                else
+                    return result;
+            }
+
+            #endregion
+        }
+
         public List<ushort> Indices = new List<ushort>();
         public List<float> Vertices = new List<float>();
         public List<float> Normals = new List<float>();
@@ -27,7 +51,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public List<Primitive.TextureEntryFace> Materials = new List<Primitive.TextureEntryFace>();
         public List<SubmeshDesc> SubMeshes = new List<SubmeshDesc>();
 
-        private SortedList<int, Face> _sortedFaces = new SortedList<int, Face>();
+        private SortedList<int, Face> _sortedFaces = new SortedList<int, Face>(new DuplicateKeyComparer<int>());
         private Dictionary<ulong, int> _knownMaterials = new Dictionary<ulong, int>();
 
         public void CombineFace(Face face)

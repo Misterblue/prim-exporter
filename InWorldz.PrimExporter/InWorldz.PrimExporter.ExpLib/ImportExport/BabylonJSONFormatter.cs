@@ -149,6 +149,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 combiner.CombineFace(face);
             }           
             
+            combiner.Complete();
             
             List<string> materialsList = new List<string>();
             for (int i = 0; i < combiner.Materials.Count; i++)
