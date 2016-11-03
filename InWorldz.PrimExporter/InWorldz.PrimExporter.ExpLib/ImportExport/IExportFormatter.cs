@@ -20,5 +20,12 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         /// <param name="datas"></param>
         /// <returns></returns>
         ExportResult Export(GroupDisplayData datas);
+
+        /// <summary>
+        /// Export multiple groups
+        /// </summary>
+        /// <param name="datas"></param>
+        /// <returns></returns>
+        ExportResult Export(IEnumerable<GroupDisplayData> datas);
     }
 }

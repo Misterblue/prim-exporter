@@ -17,7 +17,34 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
     public class BabylonJSONFormatter : IExportFormatter
     {
         private readonly ObjectHasher _objHasher = new ObjectHasher();
-        
+
+        public ExportResult Export(IEnumerable<GroupDisplayData> groups)
+        {
+            BabylonOutputs outputs = new BabylonOutputs();
+            string tempPath = Path.GetTempPath();
+
+            var prims = new List<object>();
+            var groupInstances = new Dictionary<string, List<object>>();
+
+            foreach (var group in groups)
+            {
+                //see if we already have this group
+                List<object> instances;
+                //if (groupInstances.TryGetValue())
+
+                Tuple<string, object, List<object>> rootPrim = SerializeCombinedFaces(null, group.RootPrim, "png", tempPath, outputs);
+                prims.Add(rootPrim.Item2);
+
+                foreach (var data in group.Prims.Where(p => p != group.RootPrim))
+                {
+                    prims.Add(SerializeCombinedFaces(rootPrim.Item1, data, "png", tempPath, outputs).Item2);
+                }
+            }
+            
+
+            return PackageResult(string.Empty, string.Empty, outputs, prims);
+        }
+
         public ExportResult Export(GroupDisplayData datas)
         {
             BabylonOutputs outputs = new BabylonOutputs();
@@ -25,7 +52,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
             var prims = new List<object>();
 
-            Tuple<string, object> rootPrim = SerializeCombinedFaces(null, datas.RootPrim, "png", tempPath, outputs);
+            Tuple<string, object, List<object>> rootPrim = SerializeCombinedFaces(null, datas.RootPrim, "png", tempPath, outputs);
             prims.Add(rootPrim.Item2);
 
             foreach (var data in datas.Prims.Where(p => p != datas.RootPrim))
@@ -60,7 +87,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             BabylonOutputs outputs = new BabylonOutputs();
             string tempPath = Path.GetTempPath();
 
-            Tuple<string, object> result = SerializeCombinedFaces(null, data, "png", tempPath, outputs);
+            Tuple<string, object, List<Object>> result = SerializeCombinedFaces(null, data, "png", tempPath, outputs);
             
 
             return PackageResult("object", "creator", outputs, new List<object>{result.Item2});
@@ -139,7 +166,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         /// <summary>
         /// Serializes the combined faces and returns a mesh
         /// </summary>
-        private Tuple<string, object> SerializeCombinedFaces(
+        private Tuple<string, object, List<object>> SerializeCombinedFaces(
             string parent, PrimDisplayData data, 
             string materialType, string tempPath, BabylonOutputs outputs)
         {
@@ -269,6 +296,12 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 });
             }
 
+            List<object> instanceList = null;
+            if (parent == null)
+            {
+                instanceList = new List<object>();
+            }
+
             var primId = data.ShapeHash + "_" + data.MaterialHash + (parent == null ? "_P" : "");
             var mesh = new
             {
@@ -295,27 +328,27 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 indices = combiner.Indices,
                 subMeshes = submeshes,
                 autoAnimate = false,
-                billboardMode = 0
+                billboardMode = 0,
+                instances = instanceList
             };
 
-            return new Tuple<string, object>(primId, mesh);
+            return new Tuple<string, object, List<object>>(primId, mesh, instanceList);
         }
 
-        private float ShinyToPercent(OpenMetaverse.Shininess shininess)
+        private float ShinyToPercent(Shininess shininess)
         {
             switch (shininess)
             {
-                case OpenMetaverse.Shininess.High:
+                case Shininess.High:
                     return 1.0f;
-                case OpenMetaverse.Shininess.Medium:
+                case Shininess.Medium:
                     return 0.5f;
-                case OpenMetaverse.Shininess.Low:
+                case Shininess.Low:
                     return 0.25f;
             }
 
             return 0.0f;
         }
-
-
+        
     }
 }

@@ -15,6 +15,11 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
     /// </summary>
     public class ThreeJSONFormatter : IExportFormatter
     {
+        public ExportResult Export(IEnumerable<GroupDisplayData> datas)
+        {
+            throw new NotImplementedException();
+        }
+
         public ExportResult Export(GroupDisplayData datas)
         {
             ExportResult result = new ExportResult();
@@ -253,7 +258,5 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
             return 0.0f;
         }
-
-        
     }
 }

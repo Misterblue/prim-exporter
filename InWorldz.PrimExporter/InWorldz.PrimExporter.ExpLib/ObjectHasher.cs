@@ -8,8 +8,13 @@ namespace InWorldz.PrimExporter.ExpLib
 {
     public sealed class ObjectHasher
     {
-        static ObjectHasher()
+        /// <summary>
+        /// Calculate a hash that takes both the prim shape and materials into account
+        /// </summary>
+        public ulong GetPrimHash(ulong hash, PrimitiveBaseShape shape, DetailLevel lod, FacetedMesh mesh, Primitive prim)
         {
+            //hash = djb2(hash, GetMeshShapeHash(shape, lod));
+            throw new NotImplementedException();
         }
 
         /// <summary>
