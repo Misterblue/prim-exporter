@@ -1,8 +1,8 @@
 using System;
-using System.Linq;
 using OpenMetaverse;
 using OpenMetaverse.Rendering;
 using OpenSim.Framework;
+using Murmurhash264A;
 
 namespace InWorldz.PrimExporter.ExpLib
 {
@@ -13,8 +13,8 @@ namespace InWorldz.PrimExporter.ExpLib
         /// </summary>
         public ulong GetPrimHash(ulong hash, PrimitiveBaseShape shape, DetailLevel lod, FacetedMesh mesh, Primitive prim)
         {
-            //hash = djb2(hash, GetMeshShapeHash(shape, lod));
-            throw new NotImplementedException();
+            hash = Murmur2.Hash(GetMeshShapeHash(shape, lod), hash);
+            return Murmur2.Hash(GetMeshMaterialHash(mesh, prim), hash);
         }
 
         /// <summary>
@@ -28,24 +28,24 @@ namespace InWorldz.PrimExporter.ExpLib
         {
             ulong hash = 5381;
 
-            hash = djb2(hash, shape.PathCurve);
-            hash = djb2(hash, (byte)((byte)shape.HollowShape | (byte)shape.ProfileShape));
-            hash = djb2(hash, shape.PathBegin);
-            hash = djb2(hash, shape.PathEnd);
-            hash = djb2(hash, shape.PathScaleX);
-            hash = djb2(hash, shape.PathScaleY);
-            hash = djb2(hash, shape.PathShearX);
-            hash = djb2(hash, shape.PathShearY);
-            hash = djb2(hash, (byte)shape.PathTwist);
-            hash = djb2(hash, (byte)shape.PathTwistBegin);
-            hash = djb2(hash, (byte)shape.PathRadiusOffset);
-            hash = djb2(hash, (byte)shape.PathTaperX);
-            hash = djb2(hash, (byte)shape.PathTaperY);
-            hash = djb2(hash, shape.PathRevolutions);
-            hash = djb2(hash, (byte)shape.PathSkew);
-            hash = djb2(hash, shape.ProfileBegin);
-            hash = djb2(hash, shape.ProfileEnd);
-            hash = djb2(hash, shape.ProfileHollow);
+            hash = Murmur2.Hash(shape.PathCurve, hash);
+            hash = Murmur2.Hash((byte)((byte)shape.HollowShape | (byte)shape.ProfileShape), hash);
+            hash = Murmur2.Hash(shape.PathBegin, hash);
+            hash = Murmur2.Hash(shape.PathEnd, hash);
+            hash = Murmur2.Hash(shape.PathScaleX, hash);
+            hash = Murmur2.Hash(shape.PathScaleY, hash);
+            hash = Murmur2.Hash(shape.PathShearX, hash);
+            hash = Murmur2.Hash(shape.PathShearY, hash);
+            hash = Murmur2.Hash((byte)shape.PathTwist, hash);
+            hash = Murmur2.Hash((byte)shape.PathTwistBegin, hash);
+            hash = Murmur2.Hash((byte)shape.PathRadiusOffset, hash);
+            hash = Murmur2.Hash((byte)shape.PathTaperX, hash);
+            hash = Murmur2.Hash((byte)shape.PathTaperY, hash);
+            hash = Murmur2.Hash(shape.PathRevolutions, hash);
+            hash = Murmur2.Hash((byte)shape.PathSkew, hash);
+            hash = Murmur2.Hash(shape.ProfileBegin, hash);
+            hash = Murmur2.Hash(shape.ProfileEnd, hash);
+            hash = Murmur2.Hash(shape.ProfileHollow, hash);
 
             // Include LOD in hash, accounting for endianness
             byte[] lodBytes = new byte[4];
@@ -55,17 +55,14 @@ namespace InWorldz.PrimExporter.ExpLib
                 Array.Reverse(lodBytes, 0, 4);
             }
 
-            foreach (byte t in lodBytes)
-                hash = djb2(hash, t);
+            hash = Murmur2.Hash(shape.ProfileHollow, hash);
 
             // include sculpt UUID
             if (shape.SculptEntry)
             {
-                var sculptUUIDBytes = shape.SculptTexture.GetBytes();
-                foreach (byte t in sculptUUIDBytes)
-                    hash = djb2(hash, t);
-
-                hash = djb2(hash, shape.SculptType);
+                var sculptUuidBytes = shape.SculptTexture.GetBytes();
+                hash = Murmur2.Hash(sculptUuidBytes, hash);
+                hash = Murmur2.Hash(shape.SculptType, hash);
             }
 
             return hash;
@@ -93,19 +90,19 @@ namespace InWorldz.PrimExporter.ExpLib
 
         public ulong GetMaterialFaceHash(ulong hash, Primitive.TextureEntryFace teFace)
         {
-            hash = djb2(hash, (ushort) teFace.Bump);
-            hash = djb2(hash, (byte) (teFace.Fullbright ? 1 : 0));
-            hash = djb2(hash, BitConverter.GetBytes(teFace.Glow));
-            hash = djb2(hash, (byte) (teFace.MediaFlags ? 1 : 0));
-            hash = djb2(hash, BitConverter.GetBytes(teFace.OffsetU));
-            hash = djb2(hash, BitConverter.GetBytes(teFace.OffsetV));
-            hash = djb2(hash, BitConverter.GetBytes(teFace.RepeatU));
-            hash = djb2(hash, BitConverter.GetBytes(teFace.RepeatV));
-            hash = djb2(hash, BitConverter.GetBytes(teFace.Rotation));
-            hash = djb2(hash, teFace.RGBA.GetBytes());
-            hash = djb2(hash, (byte) teFace.Shiny);
-            hash = djb2(hash, (byte) teFace.TexMapType);
-            hash = djb2(hash, teFace.TextureID.GetBytes());
+            hash = Murmur2.Hash((ushort) teFace.Bump, hash);
+            hash = Murmur2.Hash((byte) (teFace.Fullbright ? 1 : 0), hash);
+            hash = Murmur2.Hash(BitConverter.GetBytes(teFace.Glow), hash);
+            hash = Murmur2.Hash((byte) (teFace.MediaFlags ? 1 : 0), hash);
+            hash = Murmur2.Hash(BitConverter.GetBytes(teFace.OffsetU), hash);
+            hash = Murmur2.Hash(BitConverter.GetBytes(teFace.OffsetV), hash);
+            hash = Murmur2.Hash(BitConverter.GetBytes(teFace.RepeatU), hash);
+            hash = Murmur2.Hash(BitConverter.GetBytes(teFace.RepeatV), hash);
+            hash = Murmur2.Hash(BitConverter.GetBytes(teFace.Rotation), hash);
+            hash = Murmur2.Hash(teFace.RGBA.GetBytes(), hash);
+            hash = Murmur2.Hash((byte) teFace.Shiny, hash);
+            hash = Murmur2.Hash((byte) teFace.TexMapType, hash);
+            hash = Murmur2.Hash(teFace.TextureID.GetBytes(), hash);
             return hash;
         }
 
@@ -113,25 +110,6 @@ namespace InWorldz.PrimExporter.ExpLib
         {
             ulong hash = 5381;
             return GetMaterialFaceHash(hash, teFace);
-        }
-
-        private ulong djb2(ulong hash, byte c)
-        {
-            return ((hash << 5) + hash) + (ulong)c;
-        }
-
-        private ulong djb2(ulong hash, ushort c)
-        {
-            hash = ((hash << 5) + hash) + (ulong)((byte)c);
-            return ((hash << 5) + hash) + (ulong)(c >> 8);
-        }
-
-        private ulong djb2(ulong hash, byte[] bytes)
-        {
-            foreach (byte b in bytes)
-                hash = djb2(hash, b);
-
-            return hash;
         }
     }
 }
