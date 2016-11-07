@@ -8,6 +8,7 @@ using OpenMetaverse;
 using System.IO;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using Murmurhash264A;
 
 namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
@@ -24,25 +25,65 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             string tempPath = Path.GetTempPath();
 
             var prims = new List<object>();
-            var groupInstances = new Dictionary<string, List<object>>();
+            var groupInstances = new Dictionary<ulong, List<object>>();
 
             foreach (var group in groups)
             {
                 //see if we already have this group
-                List<object> instances;
-                //if (groupInstances.TryGetValue())
+                ulong groupHash = GetGroupHash(group);
 
-                Tuple<string, object, List<object>> rootPrim = SerializeCombinedFaces(null, group.RootPrim, "png", tempPath, outputs);
-                prims.Add(rootPrim.Item2);
-
-                foreach (var data in group.Prims.Where(p => p != group.RootPrim))
+                List <object> instances;
+                if (groupInstances.TryGetValue(groupHash, out instances))
                 {
-                    prims.Add(SerializeCombinedFaces(rootPrim.Item1, data, "png", tempPath, outputs).Item2);
+                    //yes, add this as an instance of the group
+                    instances.Add(
+                        new
+                        {
+                            name = groupHash + "_inst_" + instances.Count,
+                            position =
+                                new[]
+                                {
+                                    group.RootPrim.OffsetPosition.X, group.RootPrim.OffsetPosition.Y,
+                                    group.RootPrim.OffsetPosition.Z
+                                },
+                            rotationQuaternion =
+                                new[]
+                                {
+                                    group.RootPrim.OffsetRotation.X, group.RootPrim.OffsetRotation.Y,
+                                    group.RootPrim.OffsetRotation.Z, group.RootPrim.OffsetRotation.W
+                                },
+                            scaling = new[] {group.RootPrim.Scale.X, group.RootPrim.Scale.Y, group.RootPrim.Scale.Z},
+                        }
+                        );
+                }
+                else
+                {
+                    Tuple<string, object, List<object>> rootPrim = SerializeCombinedFaces(null, group.RootPrim, "png", tempPath, outputs);
+                    prims.Add(rootPrim.Item2);
+
+                    foreach (var data in group.Prims.Where(p => p != group.RootPrim))
+                    {
+                        prims.Add(SerializeCombinedFaces(rootPrim.Item1, data, "png", tempPath, outputs).Item2);
+                    }
+
+                    groupInstances.Add(groupHash, rootPrim.Item3);
                 }
             }
             
 
             return PackageResult(string.Empty, string.Empty, outputs, prims);
+        }
+
+        private ulong GetGroupHash(GroupDisplayData group)
+        {
+            ulong groupHash = 5381;
+            foreach (var prim in group.Prims)
+            {
+                groupHash = Murmur2.Hash(prim.ShapeHash, groupHash);
+                groupHash = Murmur2.Hash(prim.MaterialHash, groupHash);
+            }
+
+            return groupHash;
         }
 
         public ExportResult Export(GroupDisplayData datas)
