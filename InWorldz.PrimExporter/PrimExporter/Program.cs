@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using InWorldz.PrimExporter.ExpLib;
 using InWorldz.PrimExporter.ExpLib.ImportExport;
@@ -20,6 +21,7 @@ namespace PrimExporter
         private static bool _stream;
         private static string _xmlFile;
         private static bool _direct;
+        private static string _aggrDir;
 
         private static OptionSet _options = new OptionSet()
         {
@@ -34,7 +36,9 @@ namespace PrimExporter
             { "p|packager=",    "Specifies the packager " +
                 "(ThreeJSONPackager, BabylonJSONPackager)",                                 v => _packager = v },
             { "s|stream",       "Stream XML input from STDIN",                              v => _stream = v != null },
-            { "x|xmlfile=",      "Open the given XML file for input",                        v => _xmlFile = v },
+            { "x|xmlfile=",     "Open the given XML file for input",                        v => _xmlFile = v },
+            { "a|aggregate=",   "Processes all XML files in the given directory to a " +
+                "single package",                                                           v => _aggrDir = v },
             { "?|help",         "Prints this help message",                                 v => _help = v != null }
         };
 
@@ -67,7 +71,8 @@ namespace PrimExporter
 
             ExpLib.Init();
 
-            GroupDisplayData data;
+            GroupDisplayData data = null;
+            List<GroupDisplayData> multiGroups = null;
             if (_stream)
             {
                 string input = Console.In.ReadToEnd();
@@ -78,19 +83,31 @@ namespace PrimExporter
                 string input = File.ReadAllText(_xmlFile);
                 data = GroupLoader.Instance.LoadFromXML(input, parms);
             }
+            else if (_aggrDir != null)
+            {
+                multiGroups = new List<GroupDisplayData>();
+                var dirList = Directory.EnumerateFiles(_aggrDir, "*.xml");
+                foreach (var file in dirList)
+                {
+                    string input = File.ReadAllText(file);
+                    multiGroups.Add(GroupLoader.Instance.LoadFromXML(input, parms));
+                }
+            }
             else if (_userId != UUID.Zero && _invItemId != UUID.Zero)
             {
                 data = GroupLoader.Instance.Load(_userId, _invItemId, parms);
             }
             else
             {
-                Console.Error.WriteLine("Either stream or userid and invitemid are required parameters");
+                Console.Error.WriteLine("Either stream, file, aggregation, or userid and invitemid are required parameters");
                 PrintUsage();
                 return 5;
             }
 
             IExportFormatter formatter = ExportFormatterFactory.Instance.Get(_formatter);
-            ExportResult res = formatter.Export(data);
+            ExportResult res;
+
+            res = multiGroups != null ? formatter.Export(multiGroups) : formatter.Export(data);
 
             PackagerParams pp = new PackagerParams {Direct = _direct};
 
