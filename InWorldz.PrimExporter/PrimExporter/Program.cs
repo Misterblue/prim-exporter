@@ -105,9 +105,14 @@ namespace PrimExporter
             }
 
             IExportFormatter formatter = ExportFormatterFactory.Instance.Get(_formatter);
-            ExportResult res;
+            ExportResult res = multiGroups != null ? formatter.Export(multiGroups) : formatter.Export(data);
 
-            res = multiGroups != null ? formatter.Export(multiGroups) : formatter.Export(data);
+            Console.Out.WriteLine($"Scene Statistics:\n\n" +
+                $"Concrete objects: {res.Stats.ConcreteCount}\n" +
+                $"Instanced objects: {res.Stats.InstanceCount}\n" +
+                $"Unique submeshes: {res.Stats.SubmeshCount}\n" +
+                $"Concrete primitives: {res.Stats.PrimCount}\n" +
+                $"Unique textures: {res.Stats.TextureCount}\n");
 
             PackagerParams pp = new PackagerParams {Direct = _direct};
 

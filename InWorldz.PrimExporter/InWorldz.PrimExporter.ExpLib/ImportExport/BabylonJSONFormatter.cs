@@ -21,6 +21,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
         public ExportResult Export(IEnumerable<GroupDisplayData> groups)
         {
+            ExportStats stats = new ExportStats();
             BabylonOutputs outputs = new BabylonOutputs();
             string tempPath = Path.GetTempPath();
 
@@ -55,23 +56,29 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                             scaling = new[] {group.RootPrim.Scale.X, group.RootPrim.Scale.Y, group.RootPrim.Scale.Z},
                         }
                         );
+
+                    stats.InstanceCount++;
                 }
                 else
                 {
-                    Tuple<string, object, List<object>> rootPrim = SerializeCombinedFaces(null, group.RootPrim, "png", tempPath, outputs);
+                    Tuple<string, object, List<object>> rootPrim = SerializeCombinedFaces(null, group.RootPrim, "png", tempPath, outputs, stats);
                     prims.Add(rootPrim.Item2);
 
                     foreach (var data in group.Prims.Where(p => p != group.RootPrim))
                     {
-                        prims.Add(SerializeCombinedFaces(rootPrim.Item1, data, "png", tempPath, outputs).Item2);
+                        prims.Add(SerializeCombinedFaces(rootPrim.Item1, data, "png", tempPath, outputs, stats).Item2);
                     }
 
                     groupInstances.Add(groupHash, rootPrim.Item3);
+                    stats.ConcreteCount++;
                 }
             }
             
 
-            return PackageResult(string.Empty, string.Empty, outputs, prims);
+            var res = PackageResult(string.Empty, string.Empty, outputs, prims);
+            stats.TextureCount = res.TextureFiles.Count;
+            res.Stats = stats;
+            return res;
         }
 
         private ulong GetGroupHash(GroupDisplayData group)
@@ -88,20 +95,26 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
         public ExportResult Export(GroupDisplayData datas)
         {
+            ExportStats stats = new ExportStats();
             BabylonOutputs outputs = new BabylonOutputs();
             string tempPath = Path.GetTempPath();
 
             var prims = new List<object>();
 
-            Tuple<string, object, List<object>> rootPrim = SerializeCombinedFaces(null, datas.RootPrim, "png", tempPath, outputs);
+            Tuple<string, object, List<object>> rootPrim = SerializeCombinedFaces(null, datas.RootPrim, "png", tempPath, outputs, stats);
             prims.Add(rootPrim.Item2);
 
             foreach (var data in datas.Prims.Where(p => p != datas.RootPrim))
             {
-                prims.Add(SerializeCombinedFaces(rootPrim.Item1, data, "png", tempPath, outputs).Item2);
+                prims.Add(SerializeCombinedFaces(rootPrim.Item1, data, "png", tempPath, outputs, stats).Item2);
             }
 
-            return PackageResult(datas.ObjectName, datas.CreatorName, outputs, prims);
+            var res = PackageResult(datas.ObjectName, datas.CreatorName, outputs, prims);
+            stats.ConcreteCount = 1;
+            stats.TextureCount = res.TextureFiles.Count;
+            res.Stats = stats;
+
+            return res;
         }
 
         private static ExportResult PackageResult(string objectName, string creatorName, BabylonOutputs outputs, List<object> prims)
@@ -125,13 +138,17 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
         public ExportResult Export(PrimDisplayData data)
         {
+            ExportStats stats = new ExportStats();
             BabylonOutputs outputs = new BabylonOutputs();
             string tempPath = Path.GetTempPath();
 
-            Tuple<string, object, List<Object>> result = SerializeCombinedFaces(null, data, "png", tempPath, outputs);
+            Tuple<string, object, List<Object>> result = SerializeCombinedFaces(null, data, "png", tempPath, outputs, stats);
             
+            var res = PackageResult("object", "creator", outputs, new List<object>{result.Item2});
+            res.Stats = stats;
+            stats.ConcreteCount = 1;
 
-            return PackageResult("object", "creator", outputs, new List<object>{result.Item2});
+            return res;
         }
 
         /// <summary>
@@ -209,8 +226,11 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         /// </summary>
         private Tuple<string, object, List<object>> SerializeCombinedFaces(
             string parent, PrimDisplayData data, 
-            string materialType, string tempPath, BabylonOutputs outputs)
+            string materialType, string tempPath, BabylonOutputs outputs,
+            ExportStats stats)
         {
+            stats.PrimCount++;
+
             BabylonJSONPrimFaceCombiner combiner = new BabylonJSONPrimFaceCombiner();
             foreach (var face in data.Mesh.Faces)
             {
@@ -313,8 +333,8 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             }
 
             //finally serialize the mesh
-            Vector3 pos = data.IsRootPrim ? Vector3.Zero : data.OffsetPosition;
-            Quaternion rot = data.IsRootPrim ? Quaternion.Identity : data.OffsetRotation;
+            Vector3 pos = data.OffsetPosition;
+            Quaternion rot = data.OffsetRotation;
 
             float[] identity4x4 = 
             {
@@ -335,6 +355,8 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                     indexStart = subMesh.IndexStart,
                     indexCount = subMesh.IndexCount
                 });
+
+                stats.SubmeshCount++;
             }
 
             List<object> instanceList = null;
@@ -362,7 +384,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 pickable = true,
                 applyFog = false,
                 checkCollisions = false,
-                receiveShadows = true,
+                receiveShadows = false,
                 positions = combiner.Vertices,
                 normals = combiner.Normals,
                 uvs = combiner.UVs,

@@ -126,6 +126,7 @@
     <Compile Include="ImportExport\BabylonOutputs.cs" />
     <Compile Include="ImportExport\ExportFormatterFactory.cs" />
     <Compile Include="ImportExport\ExportResult.cs" />
+    <Compile Include="ImportExport\ExportStats.cs" />
     <Compile Include="ImportExport\IExportFormatter.cs" />
     <Compile Include="ImportExport\IPackager.cs" />
     <Compile Include="ImportExport\Package.cs" />
