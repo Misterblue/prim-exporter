@@ -19,5 +19,6 @@ namespace InWorldz.PrimExporter.ExpLib
         public Vector3 Scale;
         public ulong ShapeHash;
         public ulong MaterialHash;
+        public int LinkNum;
     }
 }

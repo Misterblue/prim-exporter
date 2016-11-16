@@ -6,6 +6,7 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Serialization;
 using InWorldz.Data.Inventory.Cassandra;
 using System.Drawing;
+using System.Linq;
 using OpenMetaverse.Rendering;
 using MySql.Data.MySqlClient;
 using InWorldz.Region.Data.Thoosa.Engines;
@@ -155,7 +156,10 @@ namespace InWorldz.PrimExporter.ExpLib
                 if (pdd.IsRootPrim) rootPrim = pdd;
             }
 
-            return new GroupDisplayData {Prims = groupData, RootPrim = rootPrim, CreatorName = userName,
+            //sort prims by link number
+            var sortedPrims = groupData.OrderBy(g => g.LinkNum);
+
+            return new GroupDisplayData {Prims = sortedPrims, RootPrim = rootPrim, CreatorName = userName,
                 ObjectName = sog.Name};
         }
 
@@ -351,7 +355,8 @@ namespace InWorldz.PrimExporter.ExpLib
                 OffsetPosition = part.OffsetPosition, OffsetRotation = part.RotationOffset,
                 Scale = part.Scale,
                 ShapeHash = _objectHasher.GetMeshShapeHash(part.Shape, DetailLevel.Highest),
-                MaterialHash = _objectHasher.GetMeshMaterialHash(mesh, prim)
+                MaterialHash = _objectHasher.GetMeshMaterialHash(mesh, prim),
+                LinkNum = part.LinkNum
             };
         }
 
