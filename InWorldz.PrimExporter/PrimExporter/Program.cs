@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using InWorldz.PrimExporter.ExpLib;
 using InWorldz.PrimExporter.ExpLib.ImportExport;
 using OpenMetaverse;
@@ -113,6 +114,27 @@ namespace PrimExporter
                 $"Unique submeshes: {res.Stats.SubmeshCount}\n" +
                 $"Concrete primitives: {res.Stats.PrimCount}\n" +
                 $"Unique textures: {res.Stats.TextureCount}\n");
+
+            //sort the prim and face stats
+            var sortedGroupsByPrimCount = res.Stats.GroupsByPrimCount.OrderByDescending(o => o.Item2);
+            var sortedGroupsBySubmeshCount = res.Stats.GroupsBySubmeshCount.OrderByDescending(o => o.Item2);
+
+            //top 10
+            Console.Out.WriteLine("Top 10 groups by prim count");
+            foreach (var grp in sortedGroupsByPrimCount.Take(10))
+            {
+                Console.Out.WriteLine($"{grp.Item2} {grp.Item1}");
+            }
+
+            Console.Out.WriteLine();
+
+            Console.Out.WriteLine("Top 10 groups by submesh count");
+            foreach (var grp in sortedGroupsBySubmeshCount.Take(10))
+            {
+                Console.Out.WriteLine($"{grp.Item2} {grp.Item1}");
+            }
+
+            Console.Out.WriteLine();
 
             PackagerParams pp = new PackagerParams {Direct = _direct};
 

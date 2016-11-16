@@ -35,5 +35,15 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         /// The number of non-instanced primitives
         /// </summary>
         public int PrimCount { get; set; }
+
+        /// <summary>
+        /// A list of all groups and their prim counts
+        /// </summary>
+        public List<Tuple<string, int>> GroupsByPrimCount { get; set; } = new List<Tuple<string, int>>();
+
+        /// <summary>
+        /// A list of all groups and their submesh counts
+        /// </summary>
+        public List<Tuple<string, int>> GroupsBySubmeshCount { get; set; } = new List<Tuple<string, int>>();
     }
 }

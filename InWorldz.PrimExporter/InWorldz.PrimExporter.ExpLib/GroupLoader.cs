@@ -156,7 +156,7 @@ namespace InWorldz.PrimExporter.ExpLib
             }
 
             return new GroupDisplayData {Prims = groupData, RootPrim = rootPrim, CreatorName = userName,
-                ObjectName = item?.Name.Replace('_', ' ') ?? ""};
+                ObjectName = sog.Name};
         }
 
         private string LookupUserName(UUID uuid)

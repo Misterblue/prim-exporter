@@ -161,23 +161,23 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                     ushort c = (ushort) (faceData.Indices[i + 2] + (verticesBase/3));
 
                     newVertsWithUvsAndNormalsAndMaterial.Add(new Tuple<Vector3, Vector2, Vector3, int>(
-                        new Vector3(-faceData.Vertices[a*3], faceData.Vertices[a*3 + 1], faceData.Vertices[a*3 + 2]),
+                        new Vector3(faceData.Vertices[a*3], faceData.Vertices[a*3 + 1], faceData.Vertices[a*3 + 2]),
                         new Vector2(faceData.TexCoords[a*2], faceData.TexCoords[a*2 + 1]),
-                        new Vector3(-faceData.Normals[a*3], faceData.Normals[a*3 + 1], faceData.Normals[a*3 + 2]),
+                        new Vector3(faceData.Normals[a*3], faceData.Normals[a*3 + 1], faceData.Normals[a*3 + 2]),
                         matAndface.Key
                         ));
 
                     newVertsWithUvsAndNormalsAndMaterial.Add(new Tuple<Vector3, Vector2, Vector3, int>(
-                        new Vector3(-faceData.Vertices[b*3], faceData.Vertices[b*3 + 1], faceData.Vertices[b*3 + 2]),
+                        new Vector3(faceData.Vertices[b*3], faceData.Vertices[b*3 + 1], faceData.Vertices[b*3 + 2]),
                         new Vector2(faceData.TexCoords[b*2], faceData.TexCoords[b*2 + 1]),
-                        new Vector3(-faceData.Normals[b*3], faceData.Normals[b*3 + 1], faceData.Normals[b*3 + 2]),
+                        new Vector3(faceData.Normals[b*3], faceData.Normals[b*3 + 1], faceData.Normals[b*3 + 2]),
                         matAndface.Key
                         ));
 
                     newVertsWithUvsAndNormalsAndMaterial.Add(new Tuple<Vector3, Vector2, Vector3, int>(
-                        new Vector3(-faceData.Vertices[c*3], faceData.Vertices[c*3 + 1], faceData.Vertices[c*3 + 2]),
+                        new Vector3(faceData.Vertices[c*3], faceData.Vertices[c*3 + 1], faceData.Vertices[c*3 + 2]),
                         new Vector2(faceData.TexCoords[c*2], faceData.TexCoords[c*2 + 1]),
-                        new Vector3(-faceData.Normals[c*3], faceData.Normals[c*3 + 1], faceData.Normals[c*3 + 2]),
+                        new Vector3(faceData.Normals[c*3], faceData.Normals[c*3 + 1], faceData.Normals[c*3 + 2]),
                         matAndface.Key
                         ));
                 }

@@ -61,6 +61,9 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 }
                 else
                 {
+                    int startingPrimCount = stats.PrimCount;
+                    int startingSubmeshCount = stats.SubmeshCount;
+
                     Tuple<string, object, List<object>> rootPrim = SerializeCombinedFaces(null, group.RootPrim, "png", tempPath, outputs, stats);
                     prims.Add(rootPrim.Item2);
 
@@ -70,6 +73,10 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                     }
 
                     groupInstances.Add(groupHash, rootPrim.Item3);
+
+                    stats.GroupsByPrimCount.Add(new Tuple<string, int>(group.ObjectName + "-" + groupHash, stats.PrimCount - startingPrimCount));
+                    stats.GroupsBySubmeshCount.Add(new Tuple<string, int>(group.ObjectName + "-" + groupHash, stats.SubmeshCount - startingSubmeshCount));
+
                     stats.ConcreteCount++;
                 }
             }
