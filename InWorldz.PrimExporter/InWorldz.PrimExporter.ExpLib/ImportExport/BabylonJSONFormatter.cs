@@ -36,6 +36,10 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 List <object> instances;
                 if (groupInstances.TryGetValue(groupHash, out instances))
                 {
+                    var fixRot = Quaternion.CreateFromAxisAngle(1.0f, 0.0f, 0.0f, -(float)Math.PI / 2f);
+                    var pos = group.RootPrim.OffsetPosition * fixRot;
+                    var rot = fixRot * group.RootPrim.OffsetRotation;
+
                     //yes, add this as an instance of the group
                     instances.Add(
                         new
@@ -44,15 +48,14 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                             position =
                                 new[]
                                 {
-                                    group.RootPrim.OffsetPosition.X, group.RootPrim.OffsetPosition.Y,
-                                    group.RootPrim.OffsetPosition.Z
+                                    pos.X, pos.Y, pos.Z
                                 },
                             rotationQuaternion =
                                 new[]
                                 {
-                                    group.RootPrim.OffsetRotation.X, group.RootPrim.OffsetRotation.Y,
-                                    group.RootPrim.OffsetRotation.Z, group.RootPrim.OffsetRotation.W
+                                    rot.X, rot.Y, rot.Z, rot.W
                                 },
+
                             scaling = new[] {group.RootPrim.Scale.X, group.RootPrim.Scale.Y, group.RootPrim.Scale.Z},
                         }
                         );
@@ -340,9 +343,6 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             }
 
             //finally serialize the mesh
-            Vector3 pos = data.OffsetPosition;
-            Quaternion rot = data.OffsetRotation;
-
             float[] identity4x4 = 
             {
                 1.0f, 0.0f, 0.0f, 0.0f,
@@ -372,6 +372,40 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 instanceList = new List<object>();
             }
 
+            //if this is a child prim, decouple its coordinate system from the parent
+            //it seems like babylon loads the object, and then applies the parentage
+            //after the object is already in world
+            /*if (parent != null)
+            {
+                Quaternion parentRot = data.Parent.OffsetRotation;
+
+                Vector3 axPos = data.OffsetPosition;
+                axPos *= parentRot;
+                Vector3 translationOffsetPosition = axPos;
+
+                pos = data.Parent.OffsetPosition + translationOffsetPosition;
+                rot = data.Parent.OffsetRotation * data.OffsetRotation;
+            }*/
+
+            //if this is a child prim, divide out the scale of the parent
+            var scale = data.Scale;
+            if (parent != null)
+            {
+                scale /= data.Parent.Scale;
+            }
+
+            Vector3 pos = data.OffsetPosition;
+            Quaternion rot = data.OffsetRotation;
+
+            if (parent == null)
+            {
+                //fix the y/z flip
+                var fixRot = Quaternion.CreateFromAxisAngle(1.0f, 0.0f, 0.0f, -(float)Math.PI / 2f);
+                pos = pos * fixRot;
+                rot = fixRot * rot;
+            }
+            
+
             var primId = data.ShapeHash + "_" + data.MaterialHash + (parent == null ? "_P" : "");
             var mesh = new
             {
@@ -381,7 +415,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 materialId = multiMaterialName,
                 position = new [] {pos.X, pos.Y, pos.Z},
                 rotationQuaternion = new[] { rot.X, rot.Y, rot.Z, rot.W },
-                scaling = new[] {data.Scale.X, data.Scale.Y, data.Scale.Z},
+                scaling = new[] {scale.X, scale.Y, scale.Z},
                 pivotMatrix = identity4x4,
                 infiniteDistance = false,
                 showBoundingBox = false,

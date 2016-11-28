@@ -12,6 +12,7 @@ namespace InWorldz.PrimExporter.ExpLib
     /// </summary>
     public class PrimDisplayData
     {
+        public PrimDisplayData Parent;
         public OpenMetaverse.Rendering.FacetedMesh Mesh;
         public bool IsRootPrim;
         public Vector3 OffsetPosition;

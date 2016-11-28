@@ -156,6 +156,15 @@ namespace InWorldz.PrimExporter.ExpLib
                 if (pdd.IsRootPrim) rootPrim = pdd;
             }
 
+            //assign parent to all prims
+            foreach (var part in groupData)
+            {
+                if (!part.IsRootPrim)
+                {
+                    part.Parent = rootPrim;
+                }
+            }
+
             //sort prims by link number
             var sortedPrims = groupData.OrderBy(g => g.LinkNum);
 
@@ -351,8 +360,11 @@ namespace InWorldz.PrimExporter.ExpLib
                 mesh.Faces[j] = face;
             }
 
+
+            var pos = part.IsRootPart() ? part.RawGroupPosition : part.OffsetPosition;
+
             return new PrimDisplayData { Mesh = mesh, IsRootPrim = part.IsRootPart(),
-                OffsetPosition = part.OffsetPosition, OffsetRotation = part.RotationOffset,
+                OffsetPosition = pos, OffsetRotation = part.RotationOffset,
                 Scale = part.Scale,
                 ShapeHash = _objectHasher.GetMeshShapeHash(part.Shape, DetailLevel.Highest),
                 MaterialHash = _objectHasher.GetMeshMaterialHash(mesh, prim),
