@@ -36,7 +36,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 List <object> instances;
                 if (groupInstances.TryGetValue(groupHash, out instances))
                 {
-                    var fixRot = Quaternion.CreateFromAxisAngle(1.0f, 0.0f, 0.0f, -(float)Math.PI / 2f);
+                    var fixRot = Quaternion.CreateFromAxisAngle(1.0f, 0.0f, 0.0f, (float)Math.PI / 2f);
                     var pos = group.RootPrim.OffsetPosition * fixRot;
                     var rot = fixRot * group.RootPrim.OffsetRotation;
 
@@ -372,21 +372,6 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 instanceList = new List<object>();
             }
 
-            //if this is a child prim, decouple its coordinate system from the parent
-            //it seems like babylon loads the object, and then applies the parentage
-            //after the object is already in world
-            /*if (parent != null)
-            {
-                Quaternion parentRot = data.Parent.OffsetRotation;
-
-                Vector3 axPos = data.OffsetPosition;
-                axPos *= parentRot;
-                Vector3 translationOffsetPosition = axPos;
-
-                pos = data.Parent.OffsetPosition + translationOffsetPosition;
-                rot = data.Parent.OffsetRotation * data.OffsetRotation;
-            }*/
-
             //if this is a child prim, divide out the scale of the parent
             var scale = data.Scale;
             if (parent != null)
@@ -400,7 +385,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             if (parent == null)
             {
                 //fix the y/z flip
-                var fixRot = Quaternion.CreateFromAxisAngle(1.0f, 0.0f, 0.0f, -(float)Math.PI / 2f);
+                var fixRot = Quaternion.CreateFromAxisAngle(1.0f, 0.0f, 0.0f, (float)Math.PI / 2f);
                 pos = pos * fixRot;
                 rot = fixRot * rot;
             }

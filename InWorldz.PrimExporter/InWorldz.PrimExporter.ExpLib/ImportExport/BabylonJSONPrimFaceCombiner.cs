@@ -51,8 +51,8 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public List<Primitive.TextureEntryFace> Materials = new List<Primitive.TextureEntryFace>();
         public List<SubmeshDesc> SubMeshes = new List<SubmeshDesc>();
 
-        private SortedList<int, Face> _sortedFaces = new SortedList<int, Face>(new DuplicateKeyComparer<int>());
-        private Dictionary<ulong, int> _knownMaterials = new Dictionary<ulong, int>();
+        private readonly SortedList<int, Face> _sortedFaces = new SortedList<int, Face>(new DuplicateKeyComparer<int>());
+        private readonly Dictionary<ulong, int> _knownMaterials = new Dictionary<ulong, int>();
 
         public void CombineFace(Face face)
         {
@@ -161,23 +161,23 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                     ushort c = (ushort) (faceData.Indices[i + 2] + (verticesBase/3));
 
                     newVertsWithUvsAndNormalsAndMaterial.Add(new Tuple<Vector3, Vector2, Vector3, int>(
-                        new Vector3(-faceData.Vertices[a*3], faceData.Vertices[a*3 + 1], faceData.Vertices[a*3 + 2]),
+                        new Vector3(faceData.Vertices[a*3], faceData.Vertices[a*3 + 1], -faceData.Vertices[a*3 + 2]),
                         new Vector2(faceData.TexCoords[a*2], faceData.TexCoords[a*2 + 1]),
-                        new Vector3(-faceData.Normals[a*3], faceData.Normals[a*3 + 1], faceData.Normals[a*3 + 2]),
+                        new Vector3(faceData.Normals[a*3], faceData.Normals[a*3 + 1], -faceData.Normals[a*3 + 2]),
                         matAndface.Key
                         ));
 
                     newVertsWithUvsAndNormalsAndMaterial.Add(new Tuple<Vector3, Vector2, Vector3, int>(
-                        new Vector3(-faceData.Vertices[b*3], faceData.Vertices[b*3 + 1], faceData.Vertices[b*3 + 2]),
+                        new Vector3(faceData.Vertices[b*3], faceData.Vertices[b*3 + 1], -faceData.Vertices[b*3 + 2]),
                         new Vector2(faceData.TexCoords[b*2], faceData.TexCoords[b*2 + 1]),
-                        new Vector3(-faceData.Normals[b*3], faceData.Normals[b*3 + 1], faceData.Normals[b*3 + 2]),
+                        new Vector3(faceData.Normals[b*3], faceData.Normals[b*3 + 1], -faceData.Normals[b*3 + 2]),
                         matAndface.Key
                         ));
 
                     newVertsWithUvsAndNormalsAndMaterial.Add(new Tuple<Vector3, Vector2, Vector3, int>(
-                        new Vector3(-faceData.Vertices[c*3], faceData.Vertices[c*3 + 1], faceData.Vertices[c*3 + 2]),
+                        new Vector3(-faceData.Vertices[c*3], faceData.Vertices[c*3 + 1], -faceData.Vertices[c*3 + 2]),
                         new Vector2(faceData.TexCoords[c*2], faceData.TexCoords[c*2 + 1]),
-                        new Vector3(-faceData.Normals[c*3], faceData.Normals[c*3 + 1], faceData.Normals[c*3 + 2]),
+                        new Vector3(-faceData.Normals[c*3], faceData.Normals[c*3 + 1], -faceData.Normals[c*3 + 2]),
                         matAndface.Key
                         ));
                 }
