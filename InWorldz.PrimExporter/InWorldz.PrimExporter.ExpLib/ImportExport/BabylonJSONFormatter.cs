@@ -18,6 +18,22 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
     public class BabylonJSONFormatter : IExportFormatter
     {
         private readonly ObjectHasher _objHasher = new ObjectHasher();
+        readonly Vector3 _centerAdj = new Vector3(-128f, -128f, 0f);
+
+        private void FixCoordinateSystem(ref Vector3 position, ref Quaternion rotation)
+        {
+            //center the object
+            var centerPos = position + _centerAdj;
+            //change coordinate system
+            centerPos.X = -centerPos.X;
+            //re-translate the object
+            position = centerPos - _centerAdj;
+
+            //compensate Y/Z flip
+            var fixRot = Quaternion.CreateFromAxisAngle(1.0f, 0.0f, 0.0f, -(float)Math.PI / 2f);
+            position = position * fixRot;
+            rotation = fixRot * rotation;
+        }
 
         public ExportResult Export(IEnumerable<GroupDisplayData> groups)
         {
@@ -36,10 +52,11 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 List <object> instances;
                 if (groupInstances.TryGetValue(groupHash, out instances))
                 {
-                    var fixRot = Quaternion.CreateFromAxisAngle(1.0f, 0.0f, 0.0f, -(float)Math.PI / 2f);
-                    var pos = group.RootPrim.OffsetPosition * fixRot;
-                    var rot = fixRot * group.RootPrim.OffsetRotation;
+                    var pos = group.RootPrim.OffsetPosition;
+                    var rot = group.RootPrim.OffsetRotation;
 
+                    FixCoordinateSystem(ref pos, ref rot);
+                    
                     //yes, add this as an instance of the group
                     instances.Add(
                         new
@@ -399,10 +416,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
             if (parent == null)
             {
-                //fix the y/z flip
-                var fixRot = Quaternion.CreateFromAxisAngle(1.0f, 0.0f, 0.0f, -(float)Math.PI / 2f);
-                pos = pos * fixRot;
-                rot = fixRot * rot;
+                FixCoordinateSystem(ref pos, ref rot);
             }
             
 
