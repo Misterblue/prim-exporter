@@ -13,7 +13,6 @@ using InWorldz.Region.Data.Thoosa.Engines;
 using Nini.Config;
 using System.Reflection;
 using OpenSim.Data;
-using Murmurhash264A;
 
 namespace InWorldz.PrimExporter.ExpLib
 {
@@ -56,7 +55,7 @@ namespace InWorldz.PrimExporter.ExpLib
             var dir = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
             IniConfigSource config = new IniConfigSource(System.IO.Path.Combine(dir, "Halcyon.ini"));
-            var settings = new OpenSim.Framework.ConfigSettings();
+            var settings = new ConfigSettings();
             settings.SettingsFile = config.Configs;
 
             Data.Assets.Stratus.Config.Settings.Instance.DisableWritebackCache = true;
