@@ -45,5 +45,15 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         /// A list of all groups and their submesh counts
         /// </summary>
         public List<Tuple<string, int>> GroupsBySubmeshCount { get; set; } = new List<Tuple<string, int>>();
+
+        public void Combine(ExportStats other) {
+            this.ConcreteCount += other.ConcreteCount;
+            this.InstanceCount += other.InstanceCount;
+            this.SubmeshCount += other.SubmeshCount;
+            this.TextureCount += other.TextureCount;
+            this.PrimCount += other.PrimCount;
+            this.GroupsByPrimCount.AddRange(other.GroupsByPrimCount);
+            this.GroupsBySubmeshCount.AddRange(other.GroupsBySubmeshCount);
+        }
     }
 }

@@ -14,11 +14,12 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public string CreatorName;
         public ExportStats Stats = new ExportStats();
 
-        public void Combine(ExportResult other)
+        public virtual void Combine(ExportResult other)
         {
             this.FaceBytes.AddRange(other.FaceBytes);
             this.TextureFiles.AddRange(other.TextureFiles);
             this.BaseObjects.AddRange(other.BaseObjects);
+            this.Stats.Combine(other.Stats);
         }
     }
 }
