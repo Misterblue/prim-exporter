@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +22,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         {
             instance.Register(new ThreeJSONFormatter(), "ThreeJSONFormatter");
             instance.Register(new BabylonJSONFormatter(), "BabylonJSONFormatter");
+            instance.Register(new GltfFormatter(), "GltfFormatter");
         }
 
         private ExportFormatterFactory()

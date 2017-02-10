@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
@@ -19,6 +19,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         {
             instance.Register(new ThreeJSONPackager(), "ThreeJSONPackager");
             instance.Register(new BabylonJSONPackager(), "BabylonJSONPackager");
+            instance.Register(new GltfPackager(), "GltfPackager");
         }
 
         private PackagerFactory()

@@ -29,13 +29,13 @@ namespace PrimExporter
             { "u|userid=",      "Specifies the user who's inventory to load items from",    v => _userId = v != null ? UUID.Parse(v) : UUID.Zero },
             { "i|invitemid=",   "Specifies the inventory ID of the item to load",           v => _invItemId = v != null ? UUID.Parse(v) : UUID.Zero },
             { "f|formatter=",   "Specifies the object formatter to use " +
-                "(ThreeJSONFormatter, BabylonJSONFormatter)",                               v => _formatter = v },
+                "(ThreeJSONFormatter, BabylonJSONFormatter, GltfFormatter)",                v => _formatter = v },
             { "l|primlimit=",   "Specifies a limit to the number of prims in a group",      v => _primLimit = v != null ? int.Parse(v) : 0 },
             { "c|checks=",      "Specifies the permissions checks to run",                  v => _checks = v != null ? int.Parse(v) : 0 },
             { "o|output=",      "Specifies the output directory",                           v => _outputDir = v },
             { "d|direct",       "Dump the generated files directly in the output dir",      v => _direct = v != null },
             { "p|packager=",    "Specifies the packager " +
-                "(ThreeJSONPackager, BabylonJSONPackager)",                                 v => _packager = v },
+                "(ThreeJSONPackager, BabylonJSONPackager, GltfPackager)",                   v => _packager = v },
             { "s|stream",       "Stream XML input from STDIN",                              v => _stream = v != null },
             { "x|xmlfile=",     "Open the given XML file for input",                        v => _xmlFile = v },
             { "a|aggregate=",   "Processes all XML files in the given directory to a " +
