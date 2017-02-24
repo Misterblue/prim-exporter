@@ -258,7 +258,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         {
             stats.PrimCount++;
 
-            BabylonJSONPrimFaceCombiner combiner = new BabylonJSONPrimFaceCombiner();
+            BabylonPrimFaceCombiner combiner = new BabylonPrimFaceCombiner();
             foreach (var face in data.Mesh.Faces)
             {
                 combiner.CombineFace(face);

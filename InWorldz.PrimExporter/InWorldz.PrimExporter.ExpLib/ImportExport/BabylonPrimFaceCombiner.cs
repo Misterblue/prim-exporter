@@ -6,7 +6,7 @@ using OpenMetaverse.Rendering;
 
 namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
-    public class BabylonJSONPrimFaceCombiner
+    public class BabylonPrimFaceCombiner
     {
         private readonly ObjectHasher _objHasher = new ObjectHasher();
 
