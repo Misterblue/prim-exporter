@@ -1,0 +1,8 @@
+﻿namespace InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBuffers;
+
+struct Quaternion {
+	x:float;
+	y:float;
+	z:float;
+	w:float;
+}

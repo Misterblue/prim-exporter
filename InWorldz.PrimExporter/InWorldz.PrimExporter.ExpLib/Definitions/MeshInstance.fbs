@@ -1,0 +1,11 @@
+include "Vector3.fbs";
+include "Quaternion.fbs";
+
+namespace InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBuffers;
+
+table MeshInstance {
+    name:string;
+    position:Vector3;
+    rotationQuaternion:Quaternion;
+    scaling:Vector3;
+}

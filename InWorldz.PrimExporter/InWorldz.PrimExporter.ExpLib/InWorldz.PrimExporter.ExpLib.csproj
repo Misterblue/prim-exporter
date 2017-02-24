@@ -54,6 +54,9 @@
     <Reference Include="CSJ2K">
       <HintPath>..\..\CSJ2K.dll</HintPath>
     </Reference>
+    <Reference Include="FlatBuffers">
+      <HintPath>..\..\FlatBuffers.dll</HintPath>
+    </Reference>
     <Reference Include="InWorldz.Data.Assets.Stratus">
       <HintPath>..\..\..\halcyon\bin\InWorldz.Data.Assets.Stratus.dll</HintPath>
     </Reference>
@@ -121,12 +124,16 @@
     <Compile Include="Exceptions\PrimExporterPermissionException.cs" />
     <Compile Include="ExpLib.cs" />
     <Compile Include="GroupDisplayData.cs" />
+    <Compile Include="ImportExport\BabylonFlatbufferFormatter.cs" />
     <Compile Include="ImportExport\BabylonJSONFormatter.cs" />
     <Compile Include="ImportExport\BabylonJSONPackager.cs" />
     <Compile Include="ImportExport\BabylonOutputs.cs" />
     <Compile Include="ImportExport\ExportFormatterFactory.cs" />
     <Compile Include="ImportExport\ExportResult.cs" />
     <Compile Include="ImportExport\ExportStats.cs" />
+    <Compile Include="ImportExport\BabylonFlatBuffers\MeshInstance.cs" />
+    <Compile Include="ImportExport\BabylonFlatBuffers\Quaternion.cs" />
+    <Compile Include="ImportExport\BabylonFlatBuffers\Vector3.cs" />
     <Compile Include="ImportExport\IExportFormatter.cs" />
     <Compile Include="ImportExport\IPackager.cs" />
     <Compile Include="ImportExport\Package.cs" />
@@ -157,6 +164,7 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
