@@ -1,10 +1,5 @@
 ﻿using OpenMetaverse;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
     /// <summary>
@@ -16,5 +11,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public Dictionary<ulong, object> MultiMaterials { get; } = new Dictionary<ulong, object>();
         public Dictionary<UUID, TrackedTexture> Textures { get; } = new Dictionary<UUID, TrackedTexture>();
         public List<string> TextureFiles { get; } = new List<string>();
+
+
     }
 }

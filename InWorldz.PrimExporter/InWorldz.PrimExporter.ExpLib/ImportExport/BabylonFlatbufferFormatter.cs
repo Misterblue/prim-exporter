@@ -8,7 +8,10 @@ using OpenMetaverse;
 using System.IO;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBuffers;
 using Murmurhash264A;
+using Quaternion = OpenMetaverse.Quaternion;
+using Vector3 = OpenMetaverse.Vector3;
 
 namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
@@ -58,6 +61,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                     FixCoordinateSystem(ref pos, ref rot);
                     
                     //yes, add this as an instance of the group
+                    
                     instances.Add(
                         new
                         {
