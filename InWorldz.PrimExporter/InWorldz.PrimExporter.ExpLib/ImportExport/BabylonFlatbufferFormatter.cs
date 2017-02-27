@@ -42,6 +42,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         {
             ExportStats stats = new ExportStats();
             BabylonOutputs outputs = new BabylonOutputs();
+            var builder = outputs.BufferBuilder;
             string tempPath = Path.GetTempPath();
 
             var prims = new List<object>();
@@ -59,27 +60,22 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                     var rot = group.RootPrim.OffsetRotation;
 
                     FixCoordinateSystem(ref pos, ref rot);
-                    
-                    //yes, add this as an instance of the group
-                    
-                    instances.Add(
-                        new
-                        {
-                            name = groupHash + "_inst_" + instances.Count,
-                            position =
-                                new[]
-                                {
-                                    pos.X, pos.Y, pos.Z
-                                },
-                            rotationQuaternion =
-                                new[]
-                                {
-                                    rot.X, rot.Y, rot.Z, rot.W
-                                },
 
-                            scaling = new[] {group.RootPrim.Scale.X, group.RootPrim.Scale.Y, group.RootPrim.Scale.Z},
-                        }
-                        );
+                    //yes, add this as an instance of the group
+                    var name = builder.CreateString(groupHash + "_inst_" + instances.Count);
+                    var position = BabylonFlatBuffers.Vector3.CreateVector3(builder, pos.X, pos.Y, pos.Z);
+                    var rotation = BabylonFlatBuffers.Quaternion.CreateQuaternion(builder, rot.X, rot.Y, rot.Z, rot.W);
+                    var scale = BabylonFlatBuffers.Vector3.CreateVector3(builder, group.RootPrim.Scale.X,
+                        group.RootPrim.Scale.Y,
+                        group.RootPrim.Scale.Z);
+
+                    MeshInstance.StartMeshInstance(builder);
+                    MeshInstance.AddName(builder, name);
+                    MeshInstance.AddPosition(builder, position);
+                    MeshInstance.AddRotationQuaternion(builder, rotation);
+                    MeshInstance.AddScaling(builder, scale);
+                    MeshInstance.EndMeshInstance(builder);
+                    
 
                     stats.InstanceCount++;
                 }

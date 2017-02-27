@@ -125,6 +125,7 @@
     <Compile Include="ExpLib.cs" />
     <Compile Include="GroupDisplayData.cs" />
     <Compile Include="ImportExport\BabylonFlatbufferFormatter.cs" />
+    <Compile Include="ImportExport\BabylonFlatBuffers\BabylonFileFlatbuffer.cs" />
     <Compile Include="ImportExport\BabylonJSONFormatter.cs" />
     <Compile Include="ImportExport\BabylonJSONPackager.cs" />
     <Compile Include="ImportExport\BabylonOutputs.cs" />

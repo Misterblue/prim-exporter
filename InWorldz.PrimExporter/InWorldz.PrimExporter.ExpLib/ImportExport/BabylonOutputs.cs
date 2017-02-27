@@ -1,5 +1,8 @@
 ﻿using OpenMetaverse;
 using System.Collections.Generic;
+using FlatBuffers;
+using InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBuffers;
+
 namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
     /// <summary>
@@ -12,6 +15,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public Dictionary<UUID, TrackedTexture> Textures { get; } = new Dictionary<UUID, TrackedTexture>();
         public List<string> TextureFiles { get; } = new List<string>();
 
-
+        public FlatBufferBuilder BufferBuilder { get; } = new FlatBufferBuilder(2048);
+        public BabylonFileFlatbuffer BabylonFlatbuffer { get; set; }
     }
 }
