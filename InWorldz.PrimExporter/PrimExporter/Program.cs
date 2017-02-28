@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -70,6 +70,7 @@ namespace PrimExporter
                 Checks = (GroupLoader.LoaderChecks)Convert.ToInt16(_checks)
             };
 
+            // ======= Get all selected objects into 'data' or 'multiGroups'
             ExpLib.Init();
 
             GroupDisplayData data = null;
@@ -105,9 +106,11 @@ namespace PrimExporter
                 return 5;
             }
 
+            // ======= Use the parameter selected formatter to convert 'data'/'multiGroups' into an ExportResult
             IExportFormatter formatter = ExportFormatterFactory.Instance.Get(_formatter);
             ExportResult res = multiGroups != null ? formatter.Export(multiGroups) : formatter.Export(data);
 
+            // ======= Output some statistics about the ExportResult
             Console.Out.WriteLine($"Scene Statistics:\n\n" +
                 $"Concrete objects: {res.Stats.ConcreteCount}\n" +
                 $"Instanced objects: {res.Stats.InstanceCount}\n" +
@@ -136,6 +139,7 @@ namespace PrimExporter
 
             Console.Out.WriteLine();
 
+            // ======= Use the parameter selected packager to convert the ExportResult into files in specified directory
             PackagerParams pp = new PackagerParams {Direct = _direct};
 
             IPackager packager = PackagerFactory.Instance.Get(_packager);

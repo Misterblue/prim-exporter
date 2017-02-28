@@ -1,4 +1,4 @@
-﻿// Copyright 2016 InWorldz Inc.
+// Copyright 2016 InWorldz Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,21 +21,21 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport {
 
         // IExportFormatter.Export
         public ExportResult Export(IEnumerable<GroupDisplayData> datas) {
-            var result = new GltfExportResult();
+            var result = new ExportResult();
 
             return result;
         }
 
         // IExportFormatter.Export
         public ExportResult Export(GroupDisplayData datas) {
-            var result = new GltfExportResult();
+            var result = new ExportResult();
 
             return result;
         }
 
         // IExportFormatter.Export
         public ExportResult Export(PrimDisplayData data) {
-            var result = new GltfExportResult();
+            var result = new ExportResult();
 
             return result;
         }
