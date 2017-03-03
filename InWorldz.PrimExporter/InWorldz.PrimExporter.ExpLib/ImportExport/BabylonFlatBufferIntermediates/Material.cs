@@ -11,11 +11,12 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBufferIntermediat
     /// </summary>
     internal class Material
     {
+        public string Id { get; set; }
         public string Name { get; set; }
-        public float[] Color { get; set; } = new float[3]; 
+        public float[] Color { get; set; } 
         public float ShinyPercent { get; set; }
         public float Alpha { get; set; }
-        public string DiffuseTexture { get; set; }
+        public Texture DiffuseTexture { get; set; }
 
         /*
          * name = matHash.ToString(),
