@@ -125,6 +125,9 @@
     <Compile Include="ExpLib.cs" />
     <Compile Include="GroupDisplayData.cs" />
     <Compile Include="ImportExport\BabylonFlatbufferFormatter.cs" />
+    <Compile Include="ImportExport\BabylonFlatBufferIntermediates\Material.cs" />
+    <Compile Include="ImportExport\BabylonFlatBufferIntermediates\MeshInstance.cs" />
+    <Compile Include="ImportExport\BabylonFlatBufferIntermediates\Texture.cs" />
     <Compile Include="ImportExport\BabylonFlatBuffers\BabylonFileFlatbuffer.cs" />
     <Compile Include="ImportExport\BabylonJSONFormatter.cs" />
     <Compile Include="ImportExport\BabylonJSONPackager.cs" />
@@ -135,6 +138,7 @@
     <Compile Include="ImportExport\BabylonFlatBuffers\MeshInstance.cs" />
     <Compile Include="ImportExport\BabylonFlatBuffers\Quaternion.cs" />
     <Compile Include="ImportExport\BabylonFlatBuffers\Vector3.cs" />
+    <Compile Include="ImportExport\BabylonFlatBufferOutputs.cs" />
     <Compile Include="ImportExport\IExportFormatter.cs" />
     <Compile Include="ImportExport\IPackager.cs" />
     <Compile Include="ImportExport\Package.cs" />

@@ -8,7 +8,7 @@ using OpenMetaverse;
 using System.IO;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBuffers;
+using InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBufferIntermediates;
 using Murmurhash264A;
 using Quaternion = OpenMetaverse.Quaternion;
 using Vector3 = OpenMetaverse.Vector3;
@@ -41,8 +41,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public ExportResult Export(IEnumerable<GroupDisplayData> groups)
         {
             ExportStats stats = new ExportStats();
-            BabylonOutputs outputs = new BabylonOutputs();
-            var builder = outputs.BufferBuilder;
+            BabylonFlatBufferOutputs outputs = new BabylonFlatBufferOutputs();
             string tempPath = Path.GetTempPath();
 
             var prims = new List<object>();
@@ -62,20 +61,13 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                     FixCoordinateSystem(ref pos, ref rot);
 
                     //yes, add this as an instance of the group
-                    var name = builder.CreateString(groupHash + "_inst_" + instances.Count);
-                    var position = BabylonFlatBuffers.Vector3.CreateVector3(builder, pos.X, pos.Y, pos.Z);
-                    var rotation = BabylonFlatBuffers.Quaternion.CreateQuaternion(builder, rot.X, rot.Y, rot.Z, rot.W);
-                    var scale = BabylonFlatBuffers.Vector3.CreateVector3(builder, group.RootPrim.Scale.X,
-                        group.RootPrim.Scale.Y,
-                        group.RootPrim.Scale.Z);
-
-                    MeshInstance.StartMeshInstance(builder);
-                    MeshInstance.AddName(builder, name);
-                    MeshInstance.AddPosition(builder, position);
-                    MeshInstance.AddRotationQuaternion(builder, rotation);
-                    MeshInstance.AddScaling(builder, scale);
-                    MeshInstance.EndMeshInstance(builder);
-                    
+                    outputs.Instances.Add(new MeshInstance()
+                    {
+                        Name = groupHash + "_inst_" + instances.Count,
+                        Position = pos,
+                        Rotation = rot,
+                        Scaling = group.RootPrim.Scale
+                    });
 
                     stats.InstanceCount++;
                 }
@@ -123,7 +115,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public ExportResult Export(GroupDisplayData datas)
         {
             ExportStats stats = new ExportStats();
-            BabylonOutputs outputs = new BabylonOutputs();
+            BabylonFlatBufferOutputs outputs = new BabylonFlatBufferOutputs();
             string tempPath = Path.GetTempPath();
 
             var prims = new List<object>();
@@ -144,7 +136,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             return res;
         }
 
-        private static ExportResult PackageResult(string objectName, string creatorName, BabylonOutputs outputs, List<object> prims)
+        private static ExportResult PackageResult(string objectName, string creatorName, BabylonFlatBufferOutputs outputs, List<object> prims)
         {
             ExportResult result = new ExportResult();
             result.ObjectName = objectName;
@@ -166,7 +158,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public ExportResult Export(PrimDisplayData data)
         {
             ExportStats stats = new ExportStats();
-            BabylonOutputs outputs = new BabylonOutputs();
+            BabylonFlatBufferOutputs outputs = new BabylonFlatBufferOutputs();
             string tempPath = Path.GetTempPath();
 
             Tuple<string, object, List<Object>> result = SerializeCombinedFaces(null, data, "png", tempPath, outputs, stats);
@@ -253,7 +245,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         /// </summary>
         private Tuple<string, object, List<object>> SerializeCombinedFaces(
             string parent, PrimDisplayData data, 
-            string materialType, string tempPath, BabylonOutputs outputs,
+            string materialType, string tempPath, BabylonFlatBufferOutputs outputs,
             ExportStats stats)
         {
             stats.PrimCount++;
