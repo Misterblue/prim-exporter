@@ -44,7 +44,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             BabylonFlatBufferOutputs outputs = new BabylonFlatBufferOutputs();
             string tempPath = Path.GetTempPath();
 
-            var prims = new List<object>();
+            var prims = new List<Mesh>();
             var groupInstances = new Dictionary<ulong, List<MeshInstance>>();
 
             foreach (var group in groups)
@@ -118,7 +118,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             BabylonFlatBufferOutputs outputs = new BabylonFlatBufferOutputs();
             string tempPath = Path.GetTempPath();
 
-            var prims = new List<object>();
+            var prims = new List<Mesh>();
 
             Tuple<string, Mesh, List<MeshInstance>> rootPrim = SerializeCombinedFaces(null, datas.RootPrim, "png", tempPath, outputs, stats);
             prims.Add(rootPrim.Item2);
@@ -136,7 +136,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             return res;
         }
 
-        private static ExportResult PackageResult(string objectName, string creatorName, BabylonFlatBufferOutputs outputs, List<object> prims)
+        private static ExportResult PackageResult(string objectName, string creatorName, BabylonFlatBufferOutputs outputs, List<Mesh> prims)
         {
             ExportResult result = new ExportResult();
             result.ObjectName = objectName;
@@ -148,6 +148,8 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 multiMaterials = outputs.MultiMaterials.Values,
                 meshes = prims
             };
+
+
 
             result.FaceBytes.Add(Encoding.UTF8.GetBytes(JsonSerializer.SerializeToString(babylonFile)));
             result.TextureFiles = outputs.TextureFiles;
@@ -163,7 +165,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
             Tuple<string, Mesh, List<MeshInstance>> result = SerializeCombinedFaces(null, data, "png", tempPath, outputs, stats);
             
-            var res = PackageResult("object", "creator", outputs, new List<object>{result.Item2});
+            var res = PackageResult("object", "creator", outputs, new List<Mesh>{result.Item2});
             res.Stats = stats;
             stats.ConcreteCount = 1;
 

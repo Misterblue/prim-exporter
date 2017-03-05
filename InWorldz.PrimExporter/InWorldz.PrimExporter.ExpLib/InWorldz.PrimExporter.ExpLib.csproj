@@ -132,6 +132,9 @@
     <Compile Include="ImportExport\BabylonFlatBufferIntermediates\SubMesh.cs" />
     <Compile Include="ImportExport\BabylonFlatBufferIntermediates\Texture.cs" />
     <Compile Include="ImportExport\BabylonFlatBuffers\BabylonFileFlatbuffer.cs" />
+    <Compile Include="ImportExport\BabylonFlatBuffers\Material.cs" />
+    <Compile Include="ImportExport\BabylonFlatBuffers\MultiMaterial.cs" />
+    <Compile Include="ImportExport\BabylonFlatBuffers\Texture.cs" />
     <Compile Include="ImportExport\BabylonJSONFormatter.cs" />
     <Compile Include="ImportExport\BabylonJSONPackager.cs" />
     <Compile Include="ImportExport\BabylonOutputs.cs" />

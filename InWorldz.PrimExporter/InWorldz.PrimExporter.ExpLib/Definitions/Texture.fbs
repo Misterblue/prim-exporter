@@ -1,0 +1,8 @@
+include "Texture.fbs";
+
+namespace InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBuffers;
+
+table Texture {
+    name:string;
+    hasAlpha:bool;
+}

@@ -3,5 +3,6 @@ include "MeshInstance.fbs";
 namespace InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBuffers;
 
 table BabylonFileFlatbuffer {
+    
     instances:[MeshInstance];
 }
