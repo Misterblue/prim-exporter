@@ -8,8 +8,10 @@ using OpenMetaverse;
 using System.IO;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using FlatBuffers;
 using InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBufferIntermediates;
 using Murmurhash264A;
+using Material = InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBuffers.Material;
 using Quaternion = OpenMetaverse.Quaternion;
 using Vector3 = OpenMetaverse.Vector3;
 
@@ -141,19 +143,54 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             ExportResult result = new ExportResult();
             result.ObjectName = objectName;
             result.CreatorName = creatorName;
-
-            var babylonFile = new
+            
+            /*var babylonFile = new
             {
                 materials = outputs.Materials.Values,
                 multiMaterials = outputs.MultiMaterials.Values,
                 meshes = prims
-            };
+            };*/
 
 
+            FlatBufferBuilder builder = new FlatBufferBuilder(2048);
 
-            result.FaceBytes.Add(Encoding.UTF8.GetBytes(JsonSerializer.SerializeToString(babylonFile)));
-            result.TextureFiles = outputs.TextureFiles;
+            List<Offset<BabylonFlatBuffers.Material>> materialOffsets = new List<Offset<Material>>();
 
+            foreach (var mat in outputs.Materials.Values)
+            {
+                var id = builder.CreateString(mat.Id);
+                var name = builder.CreateString(mat.Name);
+                var color = BabylonFlatBuffers.Material.CreateColorVector(builder, mat.Color);
+                var textureName = builder.CreateString(mat.DiffuseTexture.Name);
+                var texture = BabylonFlatBuffers.Texture.CreateTexture(builder, textureName, mat.DiffuseTexture.HasAlpha);
+
+                var outMat = BabylonFlatBuffers.Material.CreateMaterial(builder, id, name, color, mat.ShinyPercent,
+                    mat.Alpha, texture);
+                materialOffsets.Add(outMat);
+            }
+
+
+            List<Offset<BabylonFlatBuffers.MultiMaterial>> multiMaterialOffsets = new List<Offset<BabylonFlatBuffers.MultiMaterial>>();
+
+            foreach (var mat in outputs.MultiMaterials.Values)
+            {
+                var id = builder.CreateString(mat.Id);
+                var name = builder.CreateString(mat.Name);
+
+                List<StringOffset> materialIds = new List<StringOffset>();
+                foreach (var matId in mat.MaterialsList)
+                {
+                    materialIds.Add(builder.CreateString(matId));
+                }
+
+                var matList = BabylonFlatBuffers.MultiMaterial.CreateMaterialsListVector(builder, materialIds.ToArray());
+                var outMat = BabylonFlatBuffers.MultiMaterial.CreateMultiMaterial(builder, id, name, matList);
+                multiMaterialOffsets.Add(outMat);
+            }
+
+            
+
+            
             return result;
         }
 

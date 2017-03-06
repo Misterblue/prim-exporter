@@ -1,0 +1,9 @@
+namespace InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBuffers;
+
+table SubMesh {
+    materialIndex:int;
+    verticesStart:int;
+    verticesCount:int;
+    indexStart:int;
+    indexCount:int;
+}
