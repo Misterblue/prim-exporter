@@ -7,6 +7,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
     public class ExportResult
     {
+        public Tuple<byte[], int, int> FaceBlob; //data, start, length
         public List<byte[]> FaceBytes = new List<byte[]>();
         public List<string> TextureFiles = new List<string>();
         public List<PrimDisplayData> BaseObjects = new List<PrimDisplayData>();

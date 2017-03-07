@@ -144,18 +144,9 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             result.ObjectName = objectName;
             result.CreatorName = creatorName;
             
-            /*var babylonFile = new
-            {
-                materials = outputs.Materials.Values,
-                multiMaterials = outputs.MultiMaterials.Values,
-                meshes = prims
-            };*/
-
-
             FlatBufferBuilder builder = new FlatBufferBuilder(2048);
 
             List<Offset<BabylonFlatBuffers.Material>> materialOffsets = new List<Offset<Material>>();
-
             foreach (var mat in outputs.Materials.Values)
             {
                 var id = builder.CreateString(mat.Id);
@@ -171,7 +162,6 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
 
             List<Offset<BabylonFlatBuffers.MultiMaterial>> multiMaterialOffsets = new List<Offset<BabylonFlatBuffers.MultiMaterial>>();
-
             foreach (var mat in outputs.MultiMaterials.Values)
             {
                 var id = builder.CreateString(mat.Id);
@@ -188,9 +178,51 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 multiMaterialOffsets.Add(outMat);
             }
 
-            
 
-            
+            List<Offset<BabylonFlatBuffers.Mesh>> meshOffsets = new List<Offset<BabylonFlatBuffers.Mesh>>();
+            foreach (var mesh in prims)
+            {
+                var id = builder.CreateString(mesh.Id);
+                var name = builder.CreateString(mesh.Name);
+                var parentId = builder.CreateString(mesh.ParentId);
+                var materialId = builder.CreateString(mesh.MaterialId);
+                var position = BabylonFlatBuffers.Mesh.CreatePositionVector(builder, mesh.Position);
+                var rotationQuaternion = BabylonFlatBuffers.Mesh.CreateRotationQuaternionVector(builder,
+                    mesh.RotationQuaternion);
+                var scaling = BabylonFlatBuffers.Mesh.CreateScalingVector(builder, mesh.Scaling);
+                var positions = BabylonFlatBuffers.Mesh.CreatePositionsVector(builder, mesh.Positions.ToArray());
+                var normals = BabylonFlatBuffers.Mesh.CreateNormalsVector(builder, mesh.Normals.ToArray());
+                var uvs = BabylonFlatBuffers.Mesh.CreateUvsVector(builder, mesh.UVs.ToArray());
+                var indices = BabylonFlatBuffers.Mesh.CreateIndicesVector(builder, mesh.Indices.ToArray());
+
+                var submeshList = new List<Offset<BabylonFlatBuffers.SubMesh>>();
+                foreach (var submesh in mesh.Submeshes)
+                {
+                    var submeshOff = BabylonFlatBuffers.SubMesh.CreateSubMesh(builder, submesh.MaterialIndex,
+                        submesh.VerticesStart, submesh.VerticesCount, submesh.IndexStart, submesh.IndexCount);
+                    submeshList.Add(submeshOff);
+                }
+
+                var submeshes = BabylonFlatBuffers.Mesh.CreateSubmeshesVector(builder, submeshList.ToArray());
+
+                var outMesh = BabylonFlatBuffers.Mesh.CreateMesh(builder, id, name, parentId, materialId, 
+                    position, rotationQuaternion, scaling, positions, normals, uvs, indices, submeshes);
+
+                meshOffsets.Add(outMesh);
+            }
+
+            var materialsVector = BabylonFlatBuffers.BabylonFileFlatbuffer.CreateMaterialsVector(builder, materialOffsets.ToArray());
+            var multiMaterialsVector = BabylonFlatBuffers.BabylonFileFlatbuffer.CreateMultiMaterialsVector(builder, multiMaterialOffsets.ToArray());
+            var meshesVector = BabylonFlatBuffers.BabylonFileFlatbuffer.CreateMeshesVector(builder,
+                meshOffsets.ToArray());
+
+            var offset = BabylonFlatBuffers.BabylonFileFlatbuffer.CreateBabylonFileFlatbuffer(builder, materialsVector,
+                multiMaterialsVector, meshesVector);
+
+
+            BabylonFlatBuffers.BabylonFileFlatbuffer.FinishBabylonFileFlatbufferBuffer(builder, offset);
+            result.FaceBlob = new Tuple<byte[], int, int>(builder.DataBuffer.Data, builder.DataBuffer.Position, builder.DataBuffer.Length);
+
             return result;
         }
 
@@ -369,15 +401,6 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 
                 outputs.MultiMaterials[data.MaterialHash] = multiMaterial;
             }
-
-            //finally serialize the mesh
-            float[] identity4x4 = 
-            {
-                1.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, 1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f
-            };
 
             List<SubMesh> submeshes = new List<SubMesh>();
             foreach (var subMesh in combiner.SubMeshes)

@@ -1,4 +1,4 @@
-include "MeshInstance.fbs";
+include "Mesh.fbs";
 include "Material.fbs";
 include "MultiMaterial.fbs";
 
@@ -7,5 +7,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBuffers;
 table BabylonFileFlatbuffer {
     materials:[Material];
     multiMaterials:[MultiMaterial];
-    instances:[MeshInstance];
+    meshes:[Mesh];
 }
+
+root_type BabylonFileFlatbuffer;
