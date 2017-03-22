@@ -126,7 +126,7 @@ namespace InWorldz.PrimExporter.ExpLib
             return GroupDisplayDataFromSOG(UUID.Zero, parms, sog, null, string.Empty, null);
         }
 
-        private GroupDisplayData GroupDisplayDataFromSOG(UUID userId, GroupLoader.LoaderParams parms, SceneObjectGroup sog,
+        public GroupDisplayData GroupDisplayDataFromSOG(UUID userId, GroupLoader.LoaderParams parms, SceneObjectGroup sog,
             IInventoryStorage inv, string userName, InventoryItemBase item)
         {
             if (((parms.Checks & LoaderChecks.PrimLimit) != 0) && sog.GetParts().Count > parms.PrimLimit)

@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using InWorldz.PrimExporter.ExpLib;
+using InWorldz.PrimExporter.ExpLib.ImportExport;
+using NUnit.Framework;
 
 namespace InWorldz.PrimExporter.UnitTests
 {
