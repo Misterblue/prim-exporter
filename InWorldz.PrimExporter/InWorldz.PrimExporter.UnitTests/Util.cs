@@ -178,7 +178,7 @@ namespace InWorldz.PrimExporter.UnitTests
             part.Velocity = Util.RandomVector();
             part.FromItemID = UUID.Random();
 
-            part.SetSitTarget(Util.RandomVector(), Util.RandomQuat(), false);
+            part.SetSitTarget(false, Util.RandomVector(), Util.RandomQuat(), false);
 
             return part;
         }
