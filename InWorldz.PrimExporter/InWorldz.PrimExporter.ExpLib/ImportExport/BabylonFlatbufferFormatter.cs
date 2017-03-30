@@ -134,7 +134,8 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             stats.ConcreteCount = 1;
             stats.TextureCount = res.TextureFiles.Count;
             res.Stats = stats;
-
+            res.GroupHash = GetGroupHash(datas);
+            
             return res;
         }
 
