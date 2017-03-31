@@ -260,7 +260,7 @@ namespace InWorldz.PrimExporter.ExpLib
             }
         }
 
-        private PrimDisplayData ExtractPrimMesh(SceneObjectPart part, GroupLoader.LoaderParams parms, HashSet<UUID> fullPermTextures)  
+        public PrimDisplayData ExtractPrimMesh(SceneObjectPart part, GroupLoader.LoaderParams parms, HashSet<UUID> fullPermTextures)  
         {
             Primitive prim = part.Shape.ToOmvPrimitive(part.OffsetPosition, part.RotationOffset);
             //always generate at scale 1.0 and export the true scale for each part

@@ -14,7 +14,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public string ObjectName;
         public string CreatorName;
         public ExportStats Stats = new ExportStats();
-        public ulong GroupHash = 0;
+        public ulong Hash = 0;
 
         public void Combine(ExportResult other)
         {
