@@ -20,12 +20,14 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
     public class ExportResult
     {
+        public Tuple<byte[], int, int> FaceBlob; //data, start, length
         public List<byte[]> FaceBytes = new List<byte[]>();
         public List<string> TextureFiles = new List<string>();
         public List<PrimDisplayData> BaseObjects = new List<PrimDisplayData>();
         public string ObjectName;
         public string CreatorName;
         public ExportStats Stats = new ExportStats();
+        public ulong Hash = 0;
 
         public void Combine(ExportResult other)
         {

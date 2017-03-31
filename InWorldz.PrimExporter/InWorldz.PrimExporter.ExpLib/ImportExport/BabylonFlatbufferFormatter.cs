@@ -1,17 +1,4 @@
-﻿// Copyright 2016 InWorldz Inc.
-// 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
-//    http://www.apache.org/licenses/LICENSE-2.0
-// 
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using ServiceStack.Text;
@@ -21,14 +8,19 @@ using OpenMetaverse;
 using System.IO;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using FlatBuffers;
+using InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBufferIntermediates;
 using Murmurhash264A;
+using Material = InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBuffers.Material;
+using Quaternion = OpenMetaverse.Quaternion;
+using Vector3 = OpenMetaverse.Vector3;
 
 namespace InWorldz.PrimExporter.ExpLib.ImportExport
 {
     /// <summary>
     /// Formatter that outputs results suitable for using with three.js
     /// </summary>
-    public class BabylonJSONFormatter : IExportFormatter
+    public class BabylonFlatbufferFormatter : IExportFormatter
     {
         private readonly ObjectHasher _objHasher = new ObjectHasher();
         readonly Vector3 _centerAdj = new Vector3(-128f, -128f, 0f);
@@ -51,44 +43,33 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public ExportResult Export(IEnumerable<GroupDisplayData> groups)
         {
             ExportStats stats = new ExportStats();
-            BabylonOutputs outputs = new BabylonOutputs();
+            BabylonFlatBufferOutputs outputs = new BabylonFlatBufferOutputs();
             string tempPath = Path.GetTempPath();
 
-            var prims = new List<object>();
-            var groupInstances = new Dictionary<ulong, List<object>>();
+            var prims = new List<Mesh>();
+            var groupInstances = new Dictionary<ulong, List<MeshInstance>>();
 
             foreach (var group in groups)
             {
                 //see if we already have this group
                 ulong groupHash = GetGroupHash(group);
 
-                List <object> instances;
+                List <MeshInstance> instances;
                 if (groupInstances.TryGetValue(groupHash, out instances))
                 {
                     var pos = group.RootPrim.OffsetPosition;
                     var rot = group.RootPrim.OffsetRotation;
 
                     FixCoordinateSystem(ref pos, ref rot);
-                    
-                    //yes, add this as an instance of the group
-                    instances.Add(
-                        new
-                        {
-                            name = groupHash + "_inst_" + instances.Count,
-                            position =
-                                new[]
-                                {
-                                    pos.X, pos.Y, pos.Z
-                                },
-                            rotationQuaternion =
-                                new[]
-                                {
-                                    rot.X, rot.Y, rot.Z, rot.W
-                                },
 
-                            scaling = new[] {group.RootPrim.Scale.X, group.RootPrim.Scale.Y, group.RootPrim.Scale.Z},
-                        }
-                        );
+                    //yes, add this as an instance of the group
+                    outputs.Instances.Add(new MeshInstance()
+                    {
+                        Name = groupHash + "_inst_" + instances.Count,
+                        Position = pos,
+                        Rotation = rot,
+                        Scaling = group.RootPrim.Scale
+                    });
 
                     stats.InstanceCount++;
                 }
@@ -97,7 +78,7 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                     int startingPrimCount = stats.PrimCount;
                     int startingSubmeshCount = stats.SubmeshCount;
 
-                    Tuple<string, object, List<object>> rootPrim = SerializeCombinedFaces(null, group.RootPrim, "png", tempPath, outputs, stats);
+                    Tuple<string, Mesh, List<MeshInstance>> rootPrim = SerializeCombinedFaces(null, group.RootPrim, "png", tempPath, outputs, stats);
                     prims.Add(rootPrim.Item2);
 
                     foreach (var data in group.Prims.Where(p => p != group.RootPrim))
@@ -136,12 +117,12 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public ExportResult Export(GroupDisplayData datas)
         {
             ExportStats stats = new ExportStats();
-            BabylonOutputs outputs = new BabylonOutputs();
+            BabylonFlatBufferOutputs outputs = new BabylonFlatBufferOutputs();
             string tempPath = Path.GetTempPath();
 
-            var prims = new List<object>();
+            var prims = new List<Mesh>();
 
-            Tuple<string, object, List<object>> rootPrim = SerializeCombinedFaces(null, datas.RootPrim, "png", tempPath, outputs, stats);
+            Tuple<string, Mesh, List<MeshInstance>> rootPrim = SerializeCombinedFaces(null, datas.RootPrim, "png", tempPath, outputs, stats);
             prims.Add(rootPrim.Item2);
 
             foreach (var data in datas.Prims.Where(p => p != datas.RootPrim))
@@ -153,25 +134,95 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             stats.ConcreteCount = 1;
             stats.TextureCount = res.TextureFiles.Count;
             res.Stats = stats;
-
+            res.Hash = GetGroupHash(datas);
+            
             return res;
         }
 
-        private static ExportResult PackageResult(string objectName, string creatorName, BabylonOutputs outputs, List<object> prims)
+        private static ExportResult PackageResult(string objectName, string creatorName, BabylonFlatBufferOutputs outputs, List<Mesh> prims)
         {
             ExportResult result = new ExportResult();
             result.ObjectName = objectName;
             result.CreatorName = creatorName;
+            
+            FlatBufferBuilder builder = new FlatBufferBuilder(2048);
 
-            var babylonFile = new
+            List<Offset<BabylonFlatBuffers.Material>> materialOffsets = new List<Offset<Material>>();
+            foreach (var mat in outputs.Materials.Values)
             {
-                materials = outputs.Materials.Values,
-                multiMaterials = outputs.MultiMaterials.Values,
-                meshes = prims
-            };
+                var id = builder.CreateString(mat.Id);
+                var name = builder.CreateString(mat.Name);
+                var color = BabylonFlatBuffers.Material.CreateColorVector(builder, mat.Color);
+                var textureName = builder.CreateString(mat.DiffuseTexture.Name);
+                var texture = BabylonFlatBuffers.Texture.CreateTexture(builder, textureName, mat.DiffuseTexture.HasAlpha);
 
-            result.FaceBytes.Add(Encoding.UTF8.GetBytes(JsonSerializer.SerializeToString(babylonFile)));
-            result.TextureFiles = outputs.TextureFiles;
+                var outMat = BabylonFlatBuffers.Material.CreateMaterial(builder, id, name, color, mat.ShinyPercent,
+                    mat.Alpha, texture);
+                materialOffsets.Add(outMat);
+            }
+
+
+            List<Offset<BabylonFlatBuffers.MultiMaterial>> multiMaterialOffsets = new List<Offset<BabylonFlatBuffers.MultiMaterial>>();
+            foreach (var mat in outputs.MultiMaterials.Values)
+            {
+                var id = builder.CreateString(mat.Id);
+                var name = builder.CreateString(mat.Name);
+
+                List<StringOffset> materialIds = new List<StringOffset>();
+                foreach (var matId in mat.MaterialsList)
+                {
+                    materialIds.Add(builder.CreateString(matId));
+                }
+
+                var matList = BabylonFlatBuffers.MultiMaterial.CreateMaterialsListVector(builder, materialIds.ToArray());
+                var outMat = BabylonFlatBuffers.MultiMaterial.CreateMultiMaterial(builder, id, name, matList);
+                multiMaterialOffsets.Add(outMat);
+            }
+
+
+            List<Offset<BabylonFlatBuffers.Mesh>> meshOffsets = new List<Offset<BabylonFlatBuffers.Mesh>>();
+            foreach (var mesh in prims)
+            {
+                var id = builder.CreateString(mesh.Id);
+                var name = builder.CreateString(mesh.Name);
+                var parentId = builder.CreateString(mesh.ParentId);
+                var materialId = builder.CreateString(mesh.MaterialId);
+                var position = BabylonFlatBuffers.Mesh.CreatePositionVector(builder, mesh.Position);
+                var rotationQuaternion = BabylonFlatBuffers.Mesh.CreateRotationQuaternionVector(builder,
+                    mesh.RotationQuaternion);
+                var scaling = BabylonFlatBuffers.Mesh.CreateScalingVector(builder, mesh.Scaling);
+                var positions = BabylonFlatBuffers.Mesh.CreatePositionsVector(builder, mesh.Positions.ToArray());
+                var normals = BabylonFlatBuffers.Mesh.CreateNormalsVector(builder, mesh.Normals.ToArray());
+                var uvs = BabylonFlatBuffers.Mesh.CreateUvsVector(builder, mesh.UVs.ToArray());
+                var indices = BabylonFlatBuffers.Mesh.CreateIndicesVector(builder, mesh.Indices.ToArray());
+
+                var submeshList = new List<Offset<BabylonFlatBuffers.SubMesh>>();
+                foreach (var submesh in mesh.Submeshes)
+                {
+                    var submeshOff = BabylonFlatBuffers.SubMesh.CreateSubMesh(builder, submesh.MaterialIndex,
+                        submesh.VerticesStart, submesh.VerticesCount, submesh.IndexStart, submesh.IndexCount);
+                    submeshList.Add(submeshOff);
+                }
+
+                var submeshes = BabylonFlatBuffers.Mesh.CreateSubmeshesVector(builder, submeshList.ToArray());
+
+                var outMesh = BabylonFlatBuffers.Mesh.CreateMesh(builder, id, name, parentId, materialId, 
+                    position, rotationQuaternion, scaling, positions, normals, uvs, indices, submeshes);
+
+                meshOffsets.Add(outMesh);
+            }
+
+            var materialsVector = BabylonFlatBuffers.BabylonFileFlatbuffer.CreateMaterialsVector(builder, materialOffsets.ToArray());
+            var multiMaterialsVector = BabylonFlatBuffers.BabylonFileFlatbuffer.CreateMultiMaterialsVector(builder, multiMaterialOffsets.ToArray());
+            var meshesVector = BabylonFlatBuffers.BabylonFileFlatbuffer.CreateMeshesVector(builder,
+                meshOffsets.ToArray());
+
+            var offset = BabylonFlatBuffers.BabylonFileFlatbuffer.CreateBabylonFileFlatbuffer(builder, materialsVector,
+                multiMaterialsVector, meshesVector);
+
+
+            BabylonFlatBuffers.BabylonFileFlatbuffer.FinishBabylonFileFlatbufferBuffer(builder, offset);
+            result.FaceBlob = new Tuple<byte[], int, int>(builder.DataBuffer.Data, builder.DataBuffer.Position, builder.DataBuffer.Length);
 
             return result;
         }
@@ -179,12 +230,12 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         public ExportResult Export(PrimDisplayData data)
         {
             ExportStats stats = new ExportStats();
-            BabylonOutputs outputs = new BabylonOutputs();
+            BabylonFlatBufferOutputs outputs = new BabylonFlatBufferOutputs();
             string tempPath = Path.GetTempPath();
 
-            Tuple<string, object, List<Object>> result = SerializeCombinedFaces(null, data, "png", tempPath, outputs, stats);
+            Tuple<string, Mesh, List<MeshInstance>> result = SerializeCombinedFaces(null, data, "png", tempPath, outputs, stats);
             
-            var res = PackageResult("object", "creator", outputs, new List<object>{result.Item2});
+            var res = PackageResult("object", "creator", outputs, new List<Mesh>{result.Item2});
             res.Stats = stats;
             stats.ConcreteCount = 1;
 
@@ -264,9 +315,9 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
         /// <summary>
         /// Serializes the combined faces and returns a mesh
         /// </summary>
-        private Tuple<string, object, List<object>> SerializeCombinedFaces(
+        private Tuple<string, Mesh, List<MeshInstance>> SerializeCombinedFaces(
             string parent, PrimDisplayData data, 
-            string materialType, string tempPath, BabylonOutputs outputs,
+            string materialType, string tempPath, BabylonFlatBufferOutputs outputs,
             ExportStats stats)
         {
             stats.PrimCount++;
@@ -312,45 +363,25 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
                 {
                     bool hasTransparent = material.RGBA.A < 1.0f || (trackedTexture != null && trackedTexture.HasAlpha);
 
-                    object texture = null;
+                    Texture texture = null;
                     if (hasTexture)
                     {
-                        texture = new
+                        texture = new Texture()
                         {
-                            name = trackedTexture.Name,
-                            level = 1,
-                            hasAlpha = hasTransparent,
-                            getAlphaFromRGB = false,
-                            coordinatesMode = 0,
-                            uOffset = 0,
-                            vOffset = 0,
-                            uScale = 1,
-                            vScale = 1,
-                            uAng = 0,
-                            vAng = 0,
-                            wAng = 0,
-                            wrapU = true,
-                            wrapV = true,
-                            coordinatesIndex = 0
+                            HasAlpha = hasTransparent,
+                            Name = trackedTexture.Name
                         };
                     }
 
-                    var jsMaterial = new
+                    BabylonFlatBufferIntermediates.Material jsMaterial = new BabylonFlatBufferIntermediates.Material()
                     {
-                        name = matHash.ToString(),
-                        id = matHash.ToString(),
-                        ambient = new[] { material.RGBA.R, material.RGBA.G, material.RGBA.B },
-                        diffuse = new[] { material.RGBA.R, material.RGBA.G, material.RGBA.B },
-                        specular = new[] { material.RGBA.R * shinyPercent, material.RGBA.G * shinyPercent, material.RGBA.B * shinyPercent },
-                        specularPower = 50,
-                        emissive = new[] { 0.01f, 0.01f, 0.01f },
-                        alpha = material.RGBA.A,
-                        backFaceCulling = true,
-                        wireframe = false,
-                        diffuseTexture = hasTexture ? texture : null,
-                        useLightmapAsShadowmap = false,
-                        checkReadOnlyOnce = true
-                    };
+                        Alpha = material.RGBA.A,
+                        Color = new[] { material.RGBA.R, material.RGBA.G, material.RGBA.B },
+                        DiffuseTexture = hasTexture ? texture : null,
+                        Id = matHash.ToString(),
+                        Name = matHash.ToString(),
+                        ShinyPercent = shinyPercent
+                    }; 
                     
                     outputs.Materials.Add(matHash, jsMaterial);
                 }
@@ -362,60 +393,36 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             if (!outputs.MultiMaterials.ContainsKey(data.MaterialHash))
             {
                 //create the multimaterial
-                var multiMaterial = new
+                var multiMaterial = new MultiMaterial()
                 {
-                    name = multiMaterialName,
-                    id = multiMaterialName,
-                    materials = materialsList
+                    Id = multiMaterialName,
+                    MaterialsList = materialsList,
+                    Name = multiMaterialName
                 };
 
                 outputs.MultiMaterials[data.MaterialHash] = multiMaterial;
             }
 
-            //finally serialize the mesh
-            float[] identity4x4 = 
-            {
-                1.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, 1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f
-            };
-
-            List<object> submeshes = new List<object>();
+            List<SubMesh> submeshes = new List<SubMesh>();
             foreach (var subMesh in combiner.SubMeshes)
             {
-                submeshes.Add(new
+                submeshes.Add(new SubMesh()
                 {
-                    materialIndex = subMesh.MaterialIndex,
-                    verticesStart = subMesh.VerticesStart,
-                    verticesCount = subMesh.VerticesCount,
-                    indexStart = subMesh.IndexStart,
-                    indexCount = subMesh.IndexCount
+                    MaterialIndex = subMesh.MaterialIndex,
+                    VerticesStart = subMesh.VerticesStart,
+                    VerticesCount = subMesh.VerticesCount,
+                    IndexStart = subMesh.IndexStart,
+                    IndexCount = subMesh.IndexCount
                 });
 
                 stats.SubmeshCount++;
             }
 
-            List<object> instanceList = null;
+            List<MeshInstance> instanceList = null;
             if (parent == null)
             {
-                instanceList = new List<object>();
+                instanceList = new List<MeshInstance>();
             }
-
-            //if this is a child prim, decouple its coordinate system from the parent
-            //it seems like babylon loads the object, and then applies the parentage
-            //after the object is already in world
-            /*if (parent != null)
-            {
-                Quaternion parentRot = data.Parent.OffsetRotation;
-
-                Vector3 axPos = data.OffsetPosition;
-                axPos *= parentRot;
-                Vector3 translationOffsetPosition = axPos;
-
-                pos = data.Parent.OffsetPosition + translationOffsetPosition;
-                rot = data.Parent.OffsetRotation * data.OffsetRotation;
-            }*/
 
             //if this is a child prim, divide out the scale of the parent
             var scale = data.Scale;
@@ -434,36 +441,25 @@ namespace InWorldz.PrimExporter.ExpLib.ImportExport
             
 
             var primId = data.ShapeHash + "_" + data.MaterialHash + (parent == null ? "_P" : "");
-            var mesh = new
+
+            Mesh mesh = new Mesh()
             {
-                name = primId,
-                id = primId,
-                parentId = parent,
-                materialId = multiMaterialName,
-                position = new [] {pos.X, pos.Y, pos.Z},
-                rotationQuaternion = new[] { rot.X, rot.Y, rot.Z, rot.W },
-                scaling = new[] {scale.X, scale.Y, scale.Z},
-                pivotMatrix = identity4x4,
-                infiniteDistance = false,
-                showBoundingBox = false,
-                showSubMeshesBoundingBox = false,
-                isVisible = true,
-                isEnabled = true,
-                pickable = true,
-                applyFog = false,
-                checkCollisions = false,
-                receiveShadows = false,
-                positions = combiner.Vertices,
-                normals = combiner.Normals,
-                uvs = combiner.UVs,
-                indices = combiner.Indices,
-                subMeshes = submeshes,
-                autoAnimate = false,
-                billboardMode = 0,
-                instances = instanceList
+                Name = primId,
+                Id = primId,
+                ParentId = parent,
+                MaterialId = multiMaterialName,
+                Position = new [] {pos.X, pos.Y, pos.Z},
+                RotationQuaternion = new[] { rot.X, rot.Y, rot.Z, rot.W },
+                Scaling = new[] {scale.X, scale.Y, scale.Z},
+                Positions = combiner.Vertices,
+                Normals = combiner.Normals,
+                UVs = combiner.UVs,
+                Indices = combiner.Indices,
+                Submeshes = submeshes,
+                Instances = instanceList
             };
 
-            return new Tuple<string, object, List<object>>(primId, mesh, instanceList);
+            return new Tuple<string, Mesh, List<MeshInstance>>(primId, mesh, instanceList);
         }
 
         private float ShinyToPercent(Shininess shininess)

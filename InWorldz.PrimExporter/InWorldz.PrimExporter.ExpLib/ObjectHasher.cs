@@ -24,6 +24,14 @@ namespace InWorldz.PrimExporter.ExpLib
         /// <summary>
         /// Calculate a hash that takes both the prim shape and materials into account
         /// </summary>
+        public ulong GetPrimHash(ulong materialHash, ulong shapeHash)
+        {
+            return Murmur2.Hash(materialHash, shapeHash);
+        }
+
+        /// <summary>
+        /// Calculate a hash that takes both the prim shape and materials into account
+        /// </summary>
         public ulong GetPrimHash(ulong hash, PrimitiveBaseShape shape, DetailLevel lod, FacetedMesh mesh, Primitive prim)
         {
             hash = Murmur2.Hash(GetMeshShapeHash(shape, lod), hash);

@@ -1,0 +1,20 @@
+include "MeshInstance.fbs";
+include "SubMesh.fbs";
+
+namespace InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBuffers;
+
+table Mesh {
+    id:string;
+    name:string;
+    parentId:string;
+    materialId:string;
+    position:[float];
+    rotationQuaternion:[float];
+    scaling:[float];
+    positions:[float];
+    normals:[float];
+    uvs:[float];
+    indices:[ushort];
+    submeshes:[SubMesh];
+    instances:[MeshInstance];
+}

@@ -1,0 +1,9 @@
+include "Material.fbs";
+
+namespace InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBuffers;
+
+table MultiMaterial {
+    id:string;
+    name:string;
+    materialsList:[string];
+}

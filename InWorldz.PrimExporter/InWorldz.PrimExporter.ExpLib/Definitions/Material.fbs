@@ -1,0 +1,12 @@
+include "Texture.fbs";
+
+namespace InWorldz.PrimExporter.ExpLib.ImportExport.BabylonFlatBuffers;
+
+table Material {
+    id:string;
+    name:string;
+    color:[float];
+    shinyPercent:float;
+    alpha:float;
+    diffuseTexture:Texture;
+}

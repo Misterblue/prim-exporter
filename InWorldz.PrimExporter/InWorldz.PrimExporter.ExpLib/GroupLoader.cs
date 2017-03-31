@@ -139,7 +139,7 @@ namespace InWorldz.PrimExporter.ExpLib
             return GroupDisplayDataFromSOG(UUID.Zero, parms, sog, null, string.Empty, null);
         }
 
-        private GroupDisplayData GroupDisplayDataFromSOG(UUID userId, GroupLoader.LoaderParams parms, SceneObjectGroup sog,
+        public GroupDisplayData GroupDisplayDataFromSOG(UUID userId, GroupLoader.LoaderParams parms, SceneObjectGroup sog,
             IInventoryStorage inv, string userName, InventoryItemBase item)
         {
             if (((parms.Checks & LoaderChecks.PrimLimit) != 0) && sog.GetParts().Count > parms.PrimLimit)
@@ -273,7 +273,7 @@ namespace InWorldz.PrimExporter.ExpLib
             }
         }
 
-        private PrimDisplayData ExtractPrimMesh(SceneObjectPart part, GroupLoader.LoaderParams parms, HashSet<UUID> fullPermTextures)  
+        public PrimDisplayData ExtractPrimMesh(SceneObjectPart part, GroupLoader.LoaderParams parms, HashSet<UUID> fullPermTextures)  
         {
             Primitive prim = part.Shape.ToOmvPrimitive(part.OffsetPosition, part.RotationOffset);
             //always generate at scale 1.0 and export the true scale for each part
